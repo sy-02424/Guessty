@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GUESSTY</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/neodgm/neodgm-webfont@1.601/neodgm/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="./js/main.js" defer></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- 타이틀 화면 -->
+    <section id="screen-title" class="screen">
+      <div class="title-main">
+        <p class="bubble">숫자로 면접 뚫기</p>
+        <h1 class="logo">GUESSTY</h1>
+        <p class="signboard">게스티메이션 도장깨기</p>
+        <div class="hero" role="img" aria-label="신입 캐릭터 자리">🧑‍💼</div>
+      </div>
+
+      <div class="dialog">
+        <span class="dialog-name">신입</span>
+        <p class="dialog-text">오늘도 면접 보러 가 볼까?</p>
+        <button type="button" class="btn" data-go="screen-placeholder">▶ 시작</button>
+      </div>
+
+      <div class="ground" aria-hidden="true"></div>
+    </section>
+
+    <!-- 맵 자리표시 (맵 작업 때 교체) -->
+    <section id="screen-placeholder" class="screen" hidden>
+      <div class="placeholder">
+        <h2 class="placeholder-title">맵 준비 중이에요</h2>
+        <p class="placeholder-text">회사 거리가 곧 열려요.</p>
+        <button type="button" class="btn" data-go="screen-title">◀ 타이틀로</button>
+      </div>
+
+      <div class="ground" aria-hidden="true"></div>
+    </section>
+
+  </div>
+</body>
+</html>
