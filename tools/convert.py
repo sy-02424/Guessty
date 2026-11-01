@@ -3,9 +3,11 @@
 From the repository root:
     python -m pip install -r tools/requirements.txt
     python tools/convert.py
+    python tools/convert.py --group interview
 
 Paths are relative to this file, so invocation from another directory also works.
-Logo: fixed DESIGN.md six colors. Characters: <=16 original colors per sheet.
+Logo: fixed DESIGN.md six colors. All 29 characters share <=16 original colors
+from the base/company sheets, including the existing full-body hero.
 Buildings: original 16 colors plus five approved, locally masked corrections
 (<=21 shared colors). All palette conversions use no dithering.
 Originals and previews stay under the existing assets/raw/ gitignore rule.
@@ -16,6 +18,8 @@ from collections import deque
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+import argparse
+import json
 import sys
 
 try:
@@ -40,6 +44,8 @@ SOURCE_SIZES = {
     "logo-source.png": (808, 376),
     "city-tiles.png": (1536, 1024),
     "characters-base.png": (1086, 1448),
+    "characters-company.png": (1536, 1024),
+    "office-bg.png": (1024, 1536),
 }
 WHITE_MIN = 220
 WHITE_MAX_SPREAD = 28
@@ -110,6 +116,47 @@ SPRITES = (
         "assets/hero-back.png",
     ),
 )
+
+PEOPLE = ("gwajang", "bujang")
+OUTFITS = ("default", "chicken", "delivery", "it")
+EXPRESSIONS = ("neutral", "nod", "tilt")
+
+
+def interview_specs():
+    specs = []
+    for outfit_index, outfit in enumerate(OUTFITS):
+        for person_index, person in enumerate(PEOPLE):
+            for expression_index, expression in enumerate(EXPRESSIONS):
+                if outfit == "default":
+                    source = "characters-base.png"
+                    left = expression_index * 362
+                    top, bottom = ((20, 305) if person_index == 0 else (325, 648))
+                    crop = (left, top, left + 362, bottom)
+                else:
+                    source = "characters-company.png"
+                    # The sheet is visually six columns but not an exact tile
+                    # grid: a 256px split picks up the next chair or clips it.
+                    left, right = ((24, 256), (260, 504), (508, 756),
+                                   (772, 1020), (1024, 1264), (1270, 1528))[
+                                       person_index * 3 + expression_index]
+                    top, bottom = ((20, 333), (350, 656), (675, 989))[outfit_index - 1]
+                    crop = (left, top, right, bottom)
+                name = f"{person}-{outfit}-{expression}"
+                specs.append(Sprite(name, source, crop, (80, 96),
+                                    f"assets/interviewers/{name}.png"))
+    return tuple(specs)
+
+
+INTERVIEW_SPRITES = interview_specs()
+HERO_FACE_SPRITES = tuple(
+    Sprite(f"hero-face-{expression}", "characters-base.png",
+           (column * 362, 1114, (column + 1) * 362, 1416), (64, 80),
+           f"assets/hero-face/{expression}.png")
+    for column, expression in enumerate(("neutral", "flustered", "determined")))
+NEW_PORTRAITS = INTERVIEW_SPRITES + HERO_FACE_SPRITES
+FULL_BODY_SPRITES = tuple(spec for spec in SPRITES if spec.name.startswith("hero-"))
+OFFICE_SPEC = Sprite("office-bg", "office-bg.png", (0, 0, 1024, 1536),
+                     (216, 324), "assets/office-bg.png")
 
 # Exclude only the button; cropping this whole row would cut the G and Y tails.
 LOGO_BUTTON = (245, 283, 580, 334)
@@ -793,10 +840,13 @@ def khaki_preview(rendered):
     return sheet
 
 
-def main():
-    # Read and validate ALL inputs before creating or replacing any outputs.
+def load_sources(group):
+    """Validate inputs before creating any outputs; interview never needs city/logo."""
     sources = {}
     for name, expected_size in SOURCE_SIZES.items():
+        if group == "interview" and name not in (
+                "characters-base.png", "characters-company.png", "office-bg.png"):
+            continue
         path = RAW / name
         if not path.is_file():
             raise ValueError(f"Missing original: {path.relative_to(ROOT)}")
@@ -805,6 +855,256 @@ def main():
                 raise ValueError(f"Unexpected source size: {name}: {source.size}; "
                                  f"expected {expected_size}. Review crop coordinates.")
             sources[name] = source.convert("RGBA")
+    companies_path = ROOT / "data" / "companies.json"
+    if companies_path.is_file():
+        companies = json.loads(companies_path.read_text(encoding="utf-8-sig"))
+        ids = {company["id"] for company in companies}
+        if not set(OUTFITS[1:]).issubset(ids):
+            raise ValueError("Company IDs do not match chicken/delivery/it outfit filenames")
+    return sources
+
+
+def prepare_portrait(source, spec):
+    crop = source.crop(spec.crop)
+    clean = edge_flood_clear(crop, lambda rgb: min(rgb) >= WHITE_MIN
+                             and max(rgb) - min(rgb) <= WHITE_MAX_SPREAD)
+    if clean.getchannel("A").getbbox() is None:
+        raise ValueError(f"Empty portrait crop: {spec.name}")
+    bounds = clean.getchannel("A").getbbox()
+    if bounds[0] == 0 or bounds[2] == clean.width:
+        raise ValueError(f"Portrait touches crop side; review neighboring cells: {spec.name}")
+    return crop, clean
+
+
+def portrait_geometry(image):
+    bounds = image.getchannel("A").getbbox()
+    # Chair/shoulder center, not the bbox center: '?' and nod marks must not
+    # pull the actor sideways. Use the lower portion for the anchor.
+    band_top = bounds[3] - max(8, round((bounds[3] - bounds[1]) * 0.3))
+    body = image.getchannel("A").crop((0, band_top, image.width, bounds[3])).getbbox()
+    center = (body[0] + body[2]) / 2
+    return center, bounds
+
+
+def render_portrait(image, spec, scale, palette):
+    center, bounds = portrait_geometry(image)
+    small = image.resize((max(1, round(image.width * scale)),
+                          max(1, round(image.height * scale))), Image.Resampling.BOX)
+    small.putdata([(*nearest_color(p[:3], palette), 255) if p[3] >= ALPHA_CUTOFF
+                   else (0, 0, 0, 0) for p in small.get_flattened_data()])
+    canvas = Image.new("RGBA", spec.size)
+    x = round(spec.size[0] / 2 - center * scale)
+    y = spec.size[1] - 2 - round(bounds[3] * scale)
+    canvas.paste(small, (x, y))
+    validate(canvas, spec, palette)
+    return canvas
+
+
+def prepare_office(source):
+    """Keep the daytime room opaque; flatten only the empty lower UI area."""
+    office = source.copy()
+    wall = source_palette([source.crop((12, 20, 240, 120))], max_colors=1)[0]
+    ceiling = Image.new("L", source.size)
+    ceiling_draw = ImageDraw.Draw(ceiling)
+    ceiling_draw.rectangle((0, 0, 1023, 128), fill=255)
+    ceiling_draw.rectangle((345, 35, 670, 100), fill=0)  # lamp fixture
+    ceiling_draw.rectangle((408, 0, 435, 35), fill=0)  # hanging cables
+    ceiling_draw.rectangle((588, 0, 620, 35), fill=0)
+    office.paste((*wall, 255), (0, 0), ceiling)
+    floor = source_palette([source.crop((300, 900, 700, 1400))], max_colors=1)[0]
+    ImageDraw.Draw(office).rectangle((0, 704, office.width - 1, office.height - 1),
+                                    fill=(*floor, 255))
+    # Equal-area samples prevent the large empty lower half consuming 16 colors.
+    regions = ((0, 0, 1024, 704), (160, 140, 830, 500), (0, 600, 1024, 690),
+               (0, 340, 160, 630), (850, 300, 1024, 620), (0, 704, 1024, 1536))
+    balanced = []
+    for box in regions:
+        sample = office.crop(box)
+        sample.thumbnail((128, 128), Image.Resampling.NEAREST)
+        balanced.append(sample)
+    material_regions = ((430, 280, 470, 315), (620, 325, 700, 390),
+                        (12, 20, 240, 120), (200, 620, 700, 650),
+                        (400, 1000, 600, 1200), (380, 70, 640, 80))
+    palette = source_palette(balanced, color_samples=tuple(office.crop(box)
+                                                         for box in material_regions))
+    output = office.resize(OFFICE_SPEC.size, Image.Resampling.BOX)
+    output.putdata([(*nearest_color(p[:3], palette), 255)
+                    for p in output.get_flattened_data()])
+    if output.size != (216, 324) or any(p[3] != 255 for p in output.get_flattened_data()):
+        raise ValueError("Office background must be 216x324 and fully opaque")
+    return output, palette
+
+
+CHARACTER_PALETTE_ROLES = (
+    "Outline", "Dark cloth / shadow", "Gray hair: shadow", "Gray hair: light",
+    "Brown hair", "Brown hair: shadow", "Skin", "Skin: shadow", "Cream shirt",
+    "Cream shirt: shadow", "Teal jacket", "Olive cloth: shadow", "Olive cloth",
+    "Olive cloth: light", "Orange tie / badge", "Chair / warm brown",
+)
+
+
+def shared_character_palette(sources, balanced):
+    """One original RGB per material slot: no duplicate black/skin slots.
+
+    Global median cut spent multiple slots on almost identical skin and black
+    while losing gray hair and olive clothing. Material slots retain these
+    low-area but meaningful colors, still selected by MEDIANCUT from originals.
+    """
+    base, company = sources["characters-base.png"], sources["characters-company.png"]
+    pooled = [p for image in balanced for p in image.get_flattened_data() if p[3]]
+    hair = list(base.crop((250, 685, 455, 805)).get_flattened_data())
+    skin = list(base.crop((275, 790, 400, 850)).get_flattened_data())
+    shirt = list(base.crop((300, 870, 380, 950)).get_flattened_data())
+    olive = list(company.crop((70, 548, 210, 628)).get_flattened_data())
+    pack = list(base.crop((675, 920, 765, 963)).get_flattened_data())
+    gray_hair = list(base.crop((115, 345, 300, 440)).get_flattened_data())
+    selections = (
+        [p for p in pooled if max(p[:3]) <= 35],
+        [p for p in pooled if 38 <= max(p[:3]) <= 65],
+        [p for p in gray_hair if 78 <= p[0] <= 110 and abs(p[0] - p[1]) <= 12
+         and 0 <= p[1] - p[2] <= 15],
+        [p for p in gray_hair if 150 <= p[0] <= 180 and 10 <= p[0] - p[1] <= 22
+         and 5 <= p[1] - p[2] <= 20],
+        list(base.crop((320, 710, 370, 745)).get_flattened_data()),
+        [p for p in hair if 80 <= p[0] <= 125 and 55 <= p[1] <= 100
+         and 35 <= p[2] <= 80 and p[0] > p[1] + 10],
+        list(base.crop((315, 815, 350, 835)).get_flattened_data()),
+        [p for p in skin if 210 <= p[0] <= 238 and 150 <= p[1] <= 185 and 95 <= p[2] <= 140],
+        list(base.crop((345, 900, 360, 940)).get_flattened_data()),
+        [p for p in shirt if 150 <= p[0] <= 200 and abs(p[0] - p[1]) < 20 and p[1] > p[2] + 10],
+        list(base.crop((270, 891, 285, 941)).get_flattened_data()),
+        [p for p in olive if 65 <= p[0] <= 105 and p[1] >= p[0] - 4 and p[0] > p[2] + 15],
+        [p for p in pack if 95 <= p[0] <= 125 and p[1] >= p[0] and p[0] > p[2] + 20],
+        [p for p in pack if 126 <= p[0] <= 150 and p[1] >= p[0] and p[0] > p[2] + 20],
+        list(company.crop((151, 238, 162, 253)).get_flattened_data()),
+        list(base.crop((104, 210, 131, 237)).get_flattened_data()),
+    )
+    palette = []
+    for role, pixels in zip(CHARACTER_PALETTE_ROLES, selections):
+        if not pixels:
+            raise ValueError(f"No original character color samples: {role}")
+        strip = Image.new("RGBA", (len(pixels), 1))
+        strip.putdata(pixels)
+        palette.append(source_palette([strip], max_colors=1)[0])
+    if len(set(palette)) != 16:
+        raise ValueError("Character material samples collapsed; review shared palette")
+    return tuple(palette)
+
+
+def prepare_interview(sources):
+    """Pure preparation shared by both CLI paths, including all 29 characters."""
+    extracted = {spec.name: prepare_portrait(sources[spec.source], spec)
+                 for spec in NEW_PORTRAITS}
+    full_body = {spec.name: extract(sources[spec.source], spec) for spec in FULL_BODY_SPRITES}
+    balanced = []
+    for _, image in list(extracted.values()) + list(full_body.values()):
+        sample = image.crop(image.getchannel("A").getbbox())
+        sample.thumbnail((64, 64), Image.Resampling.NEAREST)
+        balanced.append(sample)
+    palette = shared_character_palette(sources, balanced)
+
+    # One scale per person/outfit across all 3 expressions; marks affect only
+    # the room needed around the head, never an individual expression's scale.
+    scales = {}
+    for spec in NEW_PORTRAITS:
+        image = extracted[spec.name][1]
+        center, bounds = portrait_geometry(image)
+        extent = max(center - bounds[0], bounds[2] - center)
+        fit = min((spec.size[0] / 2 - 3) / extent,
+                  (spec.size[1] - 4) / (bounds[3] - bounds[1]))
+        group = spec.name.rsplit("-", 1)[0]
+        scales[group] = min(scales.get(group, fit), fit)
+    rendered = {spec.name: render_portrait(extracted[spec.name][1], spec,
+                                          scales[spec.name.rsplit("-", 1)[0]], palette)
+                for spec in NEW_PORTRAITS}
+    hero_scale = min(min((spec.size[0] - 2) / full_body[spec.name][1].width,
+                         (spec.size[1] - 2) / full_body[spec.name][1].height)
+                     for spec in FULL_BODY_SPRITES)
+    for spec in FULL_BODY_SPRITES:
+        rendered[spec.name] = render(full_body[spec.name][1], spec, hero_scale, palette)
+    output, office_palette = prepare_office(sources["office-bg.png"])
+    rendered["office-bg"] = output
+    extracted.update(full_body)
+    extracted["office-bg"] = (sources["office-bg.png"].copy(), sources["office-bg.png"].copy())
+    union = {p[:3] for spec in NEW_PORTRAITS + FULL_BODY_SPRITES
+             for p in rendered[spec.name].get_flattened_data() if p[3]}
+    if len(union) > 16:
+        raise ValueError("Shared character palette exceeds 16 colors")
+    return extracted, rendered, palette, office_palette
+
+
+def portrait_sheet(specs, rendered, title, columns=3):
+    scale, gap = 3, 12
+    width = max(spec.size[0] for spec in specs) * scale + 20
+    height = max(spec.size[1] for spec in specs) * scale + 38
+    rows = (len(specs) + columns - 1) // columns
+    sheet = Image.new("RGB", (columns * width + (columns + 1) * gap,
+                              rows * height + (rows + 1) * gap + 32), "#25282c")
+    draw = ImageDraw.Draw(sheet)
+    draw.text((gap, 8), title, font=ImageFont.load_default(size=16), fill="white")
+    for index, spec in enumerate(specs):
+        x = gap + (index % columns) * (width + gap)
+        y = 32 + gap + (index // columns) * (height + gap)
+        draw.text((x, y), spec.name, font=ImageFont.load_default(size=12), fill="white")
+        image = rendered[spec.name].resize((spec.size[0] * scale, spec.size[1] * scale),
+                                           Image.Resampling.NEAREST)
+        panel = checkerboard(image.size)
+        panel.alpha_composite(image)
+        sheet.paste(panel.convert("RGB"), (x + (width - image.width) // 2, y + 26))
+    return sheet
+
+
+def interview_scene(rendered, outfit="default"):
+    # 216x324 -> 432x648 at 2x; crop one pixel on each side for the 430px frame.
+    scene = rendered["office-bg"].resize((432, 648), Image.Resampling.NEAREST).crop((1, 0, 431, 648))
+    for person, center in (("gwajang", 133), ("bujang", 297)):
+        portrait = rendered[f"{person}-{outfit}-neutral"].resize((160, 192), Image.Resampling.NEAREST)
+        scene.alpha_composite(portrait, (center - 80, 64))
+    face = rendered["hero-face-neutral"].resize((128, 160), Image.Resampling.NEAREST)
+    scene.alpha_composite(face, (8, 474))
+    draw = ImageDraw.Draw(scene)
+    # Empty layout blocks are review guides, not new in-game copy or UI code.
+    for y in (322, 366, 410):
+        draw.rectangle((24, y, 405, y + 29), fill="#44523A", outline="#E6E1C6", width=2)
+    draw.rectangle((148, 490, 414, 632), fill="#E6E1C6", outline="#2F3326", width=3)
+    return scene
+
+
+def write_interview(sources, prepared):
+    extracted, rendered, palette, office_palette = prepared
+    PREVIEW.mkdir(parents=True, exist_ok=True)
+    for spec in NEW_PORTRAITS + FULL_BODY_SPRITES + (OFFICE_SPEC,):
+        output = ROOT / spec.output
+        output.parent.mkdir(parents=True, exist_ok=True)
+        image = rendered[spec.name]
+        image.save(output)
+        extracted[spec.name][0].save(PREVIEW / f"{spec.name}-source-crop.png")
+        image.resize((image.width * 4, image.height * 4), Image.Resampling.NEAREST).save(
+            PREVIEW / f"{spec.name}-result-preview-4x.png")
+        comparison(spec, extracted[spec.name][0], image).save(PREVIEW / f"{spec.name}-comparison.png")
+        print(f"{spec.output}: {image.width}x{image.height}")
+    for outfit in OUTFITS:
+        specs = tuple(spec for spec in INTERVIEW_SPRITES if f"-{outfit}-" in spec.name)
+        portrait_sheet(specs, rendered, f"INTERVIEWERS / {outfit} / 3 expressions").save(
+            PREVIEW / f"interviewers-{outfit}-sheet.png")
+        interview_scene(rendered, outfit).save(PREVIEW / f"interview-scene-{outfit}.png")
+    portrait_sheet(HERO_FACE_SPRITES, rendered, "HERO FACE / 3 expressions").save(
+        PREVIEW / "hero-face-sheet.png")
+    portrait_sheet(FULL_BODY_SPRITES, rendered, "HERO FULL BODY / 16 colors",
+                   columns=2).save(PREVIEW / "hero-full-body-shared-palette.png")
+    comparison_montage([comparison(spec, extracted[spec.name][0], rendered[spec.name])
+                        for spec in FULL_BODY_SPRITES]).save(PREVIEW / "characters-comparison.png")
+    palette_swatch(palette, "SHARED CHARACTER PALETTE / 29 characters / <=16 colors",
+                   CHARACTER_PALETTE_ROLES).save(
+        PREVIEW / "interview-character-palette.png")
+    palette_swatch(office_palette, "OFFICE / original daytime palette / <=16 colors",
+                   ("Sky / daylight", "City / buildings", "Wall", "Desk", "Lower UI background",
+                    "Ceiling lamp") + ("Room material / shadow",) * 10).save(
+        PREVIEW / "office-palette.png")
+    print("Validated 24 interviewers + 3 hero faces + 2 full-body sprites in one <=16-color palette.")
+
+
+def convert_legacy(sources, shared_character_palette):
 
     extracted = {spec.name: extract(sources[spec.source], spec) for spec in SPRITES}
     scales = {
@@ -814,9 +1114,9 @@ def main():
     }
     hero_scale = min(scales["hero-front"], scales["hero-back"])
     scales["hero-front"] = scales["hero-back"] = hero_scale
-    palettes = {"logo-source.png": PALETTE}
+    palettes = {"logo-source.png": PALETTE, "characters-base.png": shared_character_palette}
     for source_name in SOURCE_SIZES:
-        if source_name not in palettes:
+        if source_name not in palettes and any(spec.source == source_name for spec in SPRITES):
             palettes[source_name] = source_palette(
                 [extracted[spec.name][1] for spec in SPRITES if spec.source == source_name],
                 color_samples=tuple(sources[source_name].crop(box)
@@ -893,6 +1193,18 @@ def main():
         PREVIEW / "buildings-material-cleanup-comparison.png")
     print(f"Shared building colors: {len(shared_colors)}; alpha, glass, signs and icons preserved during material cleanup.")
     print("Saved original/before/after comparisons, 4x previews and before/after palette swatches.")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--group", choices=("all", "interview"), default="all",
+                        help="all assets (default), or interview assets + shared-palette hero")
+    args = parser.parse_args()
+    sources = load_sources(args.group)
+    prepared = prepare_interview(sources)
+    if args.group == "all":
+        convert_legacy(sources, prepared[2])
+    write_interview(sources, prepared)
 
 
 if __name__ == "__main__":

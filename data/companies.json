@@ -1,0 +1,5 @@
+[
+  { "id": "chicken", "name": "쟤당치킨", "industry": "치킨 프랜차이즈", "order": 1, "building": "company-chicken.png", "outfit": "chicken", "greeting": "[문구 필요]" },
+  { "id": "delivery", "name": "대충통운", "industry": "택배·물류", "order": 2, "building": "company-box.png", "outfit": "delivery", "greeting": "[문구 필요]" },
+  { "id": "it", "name": "촤지피티", "industry": "IT", "order": 3, "building": "company-laptop.png", "outfit": "it", "greeting": "[문구 필요]" }
+]
