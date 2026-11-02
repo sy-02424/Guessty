@@ -10,10 +10,12 @@
   <link rel="stylesheet" href="./css/style.css">
   <script src="./js/main.js" defer></script>
 </head>
-<body class="world-outdoor">
-  <!-- 모바일과 PC가 같은 한 장의 거리 배경을 공유한다. -->
+<body class="world-outdoor" data-world="title">
+  <!-- 화면 종류(title / map / indoor)에 따라 중앙과 PC 양옆이 같은 세계로 확장된다. -->
   <div class="title-world" aria-hidden="true">
-    <img id="title-world-image" src="./assets/title-bg-surround.png" width="1152" height="384" alt="" fetchpriority="high">
+    <img id="title-world-image" class="world-img-title" src="./assets/title-bg-surround.png" width="1152" height="384" alt="" fetchpriority="high">
+    <img id="map-world-image" class="world-img-map" src="./assets/map-bg-surround.png?v=4" width="1152" height="324" alt="">
+    <div class="indoor-world-wings"></div>
   </div>
 
   <main id="app">
@@ -80,7 +82,7 @@
 
         <div class="intro-footer">
           <div class="intro-touch-btn" aria-hidden="true">
-            <span>▶ 화면을 터치하세요</span>
+            <span id="intro-cta-text">▶ 화면을 터치하세요</span>
           </div>
           <p class="intro-notice">등장 회사는 모두 가상이며 실제 기업과 무관합니다</p>
         </div>
@@ -88,8 +90,216 @@
     </section>
 
     <section id="screen-map" class="screen map-screen" aria-label="회사 거리 맵" hidden>
-      <!-- ③ 맵 단계에서 실제 거리·건물 UI로 채운다 -->
+      <header class="map-hud">
+        <div class="brand-pill">
+          <span id="map-stage-pill">STAGE 01</span>
+        </div>
+        <div class="brand-gauge" aria-label="도장 진행 게이지">
+          <span id="map-gauge-fill" class="brand-gauge-fill" style="width: 12%"></span>
+        </div>
+        <div class="brand-pill is-score">
+          <span id="map-stamp-pill">STAMP 0/3</span>
+        </div>
+        <button type="button" id="map-help-btn" class="brand-icon-btn" title="게스티메이션 안내" aria-label="게스티메이션 안내">?</button>
+      </header>
+
+      <div id="map-scroll" class="map-scroll">
+        <div id="map-street" class="map-street" aria-live="polite">
+          <!-- js/main.js에서 map-bg.png와 건물 핫스팟·이름표·지원자를 렌더링한다 -->
+        </div>
+      </div>
+
+      <!-- 데이터 로드 실패 안내 (COPY.md 확정 문구) -->
+      <div id="map-error" class="map-error" role="alert" hidden>
+        <div class="map-error-window">
+          <div class="intro-titlebar" aria-hidden="true">
+            <span class="intro-titlebar-name">ERROR.EXE</span>
+            <div class="intro-titlebar-controls">
+              <span class="intro-win-btn">✕</span>
+            </div>
+          </div>
+          <div class="map-error-body">
+            <p class="map-error-main">면접이 잠시 미뤄졌어요</p>
+            <p class="map-error-sub">Live Server로 열었는지 확인</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 회사 선택 모달 (brand-khaki 버튼 적용) -->
+      <div id="map-modal" class="map-modal" role="dialog" aria-modal="true" aria-labelledby="map-modal-title" hidden>
+        <div class="map-modal-window">
+          <div class="intro-titlebar">
+            <span id="map-modal-bar" class="intro-titlebar-name">COMPANY.EXE</span>
+            <button type="button" id="map-modal-close" class="intro-win-btn" aria-label="닫기">✕</button>
+          </div>
+          <div class="map-modal-body">
+            <h3 id="map-modal-title" class="map-modal-title"></h3>
+            <p id="map-modal-desc" class="map-modal-desc"></p>
+            <div id="map-modal-mode-row" class="map-modal-mode-row" hidden>
+              <button type="button" id="map-mode-guide" class="map-mode-chip is-active" data-mode="guide">가이드 모드</button>
+              <button type="button" id="map-mode-practice" class="map-mode-chip" data-mode="practice">실전 모드</button>
+            </div>
+            <div id="map-modal-actions" class="map-modal-actions">
+              <button type="button" id="map-modal-round1" class="brand-btn is-start">
+                <span aria-hidden="true">▶</span>
+                <span>1차 면접</span>
+              </button>
+              <button type="button" id="map-modal-round2" class="brand-btn is-start" disabled>
+                <span aria-hidden="true">▶</span>
+                <span>2차 면접</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ④ 면접 화면 (100dvh 무스크롤, interview.png.png 시안 준수) -->
+    <section id="screen-interview" class="screen interview-screen" aria-label="면접 진행 화면" hidden>
+      <!-- 상단 사무실 무대 (office-bg.png + 과장/부장 + 레트로 상태창) -->
+      <div class="interview-stage">
+        <img class="interview-bg" src="./assets/office-bg.png" width="216" height="324" alt="">
+
+        <!-- 좌측 상단 미니 로고 -->
+        <img class="interview-mini-logo" src="./assets/title-logo-small-v2.png" width="144" height="60" alt="GUESSTY">
+
+        <!-- 우측 상단 레트로 진행 상태창 (interview.png.png 시안) -->
+        <aside class="interview-status-win" aria-label="면접 진행 상태">
+          <div class="interview-status-bar">
+            <span id="interview-win-title" class="interview-status-bar-title">STAGE 1</span>
+            <button type="button" id="interview-exit-btn" class="interview-status-close" title="면접 나가기" aria-label="면접 나가기">✕</button>
+          </div>
+          <div class="interview-status-body">
+            <p id="interview-stage-label" class="interview-stage-label">1차 면접 · 공식</p>
+            <div class="interview-step-track" aria-hidden="true">
+              <span id="interview-step-dot-1" class="interview-step-node is-active"></span>
+              <span class="interview-step-line"></span>
+              <span id="interview-step-dot-2" class="interview-step-node"></span>
+              <span class="interview-step-line"></span>
+              <span id="interview-step-dot-3" class="interview-step-node"></span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 면접관 2인 (좌: 과장, 우: 부장) -->
+        <div class="interviewers-row">
+          <div id="slot-gwajang" class="interviewer-slot is-left">
+            <img id="img-gwajang" class="interviewer-sprite" src="./assets/interviewers/gwajang-chicken-neutral.png" width="76" height="96" alt="과장">
+            <span class="interviewer-plate">과장</span>
+          </div>
+          <div id="slot-bujang" class="interviewer-slot is-right">
+            <img id="img-bujang" class="interviewer-sprite" src="./assets/interviewers/bujang-chicken-neutral.png" width="76" height="96" alt="부장">
+            <span class="interviewer-plate">부장</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 하단 상호작용 영역 (중단 선택지 3칸 / 실전 입력창 + 하단 지원자 대사창) -->
+      <div class="interview-interact">
+        <!-- 현재 질문 요약 배너 -->
+        <div class="interview-question-bar">
+          <span class="interview-q-badge">Q</span>
+          <p id="interview-question-text" class="interview-q-text"></p>
+        </div>
+
+        <!-- 중단: 가이드모드 3지선다 선택지 판 또는 실전모드 연습장 -->
+        <div id="interview-choices" class="interview-choices" role="group" aria-label="답변 선택지">
+          <!-- JS에서 선택지 버튼 3개를 렌더링 -->
+        </div>
+
+        <!-- 실전모드 입력창 (레트로 컴퓨터 창 스타일) -->
+        <div id="interview-practice-box" class="interview-practice-box" hidden>
+          <div class="intro-titlebar">
+            <span class="intro-titlebar-name">MEMO.EXE</span>
+          </div>
+          <div class="practice-body">
+            <p id="practice-hint" class="practice-hint"></p>
+            <div class="practice-input-row">
+              <input type="number" id="practice-input" class="practice-input" inputmode="numeric" min="1" step="any" placeholder="추정한 숫자 입력">
+              <span id="practice-unit" class="practice-unit">개</span>
+            </div>
+            <p id="practice-error" class="practice-error" hidden></p>
+            <button type="button" id="practice-submit-btn" class="brand-btn is-start">
+              <span aria-hidden="true">▶</span>
+              <span>답변 제출</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 하단: 지원자 얼굴 + 민트 이름 탭 + 크림 대사창 -->
+        <div id="interview-dialogue-area" class="interview-dialogue-area" tabindex="0" role="button" aria-label="다음 대사 진행">
+          <div class="hero-portrait-wrap">
+            <img id="img-hero-face" class="hero-portrait" src="./assets/hero-face/neutral.png" width="66" height="86" alt="지원자">
+          </div>
+          <div class="dialogue-box-wrap">
+            <span id="dialogue-speaker-tab" class="dialogue-speaker-tab">지원자</span>
+            <div class="dialogue-box">
+              <p id="dialogue-text" class="dialogue-text"></p>
+              <span id="dialogue-next-arrow" class="dialogue-next-arrow" aria-hidden="true">▶</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ⑤ 결과·복기 화면 (100dvh 무스크롤, 레트로 통지서 윈도우) -->
+    <section id="screen-result" class="screen result-screen" aria-labelledby="result-verdict-title" hidden>
+      <div class="result-layout">
+        <article class="result-window">
+          <div class="intro-titlebar">
+            <span id="result-win-bar" class="intro-titlebar-name">RESULT.EXE</span>
+            <div class="intro-titlebar-controls">
+              <span class="intro-win-btn">✕</span>
+            </div>
+          </div>
+
+          <div class="result-body">
+            <!-- 상단 판정 배지 + 배수 + 도장 연출 -->
+            <header class="result-header">
+              <div class="result-verdict-row">
+                <span id="result-badge" class="result-badge">합격</span>
+                <h2 id="result-verdict-title" class="result-verdict-title"></h2>
+              </div>
+              <p id="result-closing-line" class="result-closing-line"></p>
+              <div id="result-stamp-seal" class="result-stamp-seal" hidden>STAMP CLEAR</div>
+            </header>
+
+            <!-- 추정 답 vs 실제 값 비교 판 -->
+            <div class="result-compare-card">
+              <div class="result-num-row">
+                <span class="result-num-label">내 추정 답</span>
+                <strong id="result-user-val" class="result-num-val"></strong>
+              </div>
+              <div class="result-num-row">
+                <span class="result-num-label">실제 통계 값</span>
+                <strong id="result-actual-val" class="result-num-val is-actual"></strong>
+              </div>
+              <p id="result-source-text" class="result-source-text"></p>
+            </div>
+
+            <!-- 단계별 복기 목록 -->
+            <div class="result-review-box">
+              <p id="result-summary-review" class="result-summary-review"></p>
+              <ul id="result-review-list" class="result-review-list"></ul>
+            </div>
+          </div>
+
+          <div class="intro-statusbar" aria-hidden="true">
+            <span class="intro-statusbar-pattern"></span>
+            <span class="intro-statusbar-grip"></span>
+          </div>
+        </article>
+
+        <div class="result-actions">
+          <button type="button" id="result-primary-btn" class="brand-btn is-start">
+            <span aria-hidden="true">▶</span>
+            <span id="result-primary-label">다음으로</span>
+          </button>
+          <button type="button" id="result-map-btn" class="brand-btn is-select">거리로 돌아가기</button>
+        </div>
+      </div>
     </section>
   </main>
 </body>
 </html>
+
