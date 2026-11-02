@@ -181,6 +181,13 @@
           </div>
         </aside>
 
+        <!-- 과장·부장 머리 위 말풍선 (면접관 발화 시 표시) -->
+        <div id="interviewer-bubble" class="interviewer-bubble is-left" tabindex="0" role="button" aria-label="면접관 대사 다음 진행" hidden>
+          <span id="interviewer-bubble-speaker" class="interviewer-bubble-speaker">과장</span>
+          <p id="interviewer-bubble-text" class="interviewer-bubble-text"></p>
+          <span id="interviewer-bubble-arrow" class="dialogue-next-arrow" aria-hidden="true">▶</span>
+        </div>
+
         <!-- 면접관 2인 (좌: 과장, 우: 부장) -->
         <div class="interviewers-row">
           <div id="slot-gwajang" class="interviewer-slot is-left">
@@ -194,7 +201,7 @@
         </div>
       </div>
 
-      <!-- 하단 상호작용 영역 (중단 선택지 3칸 / 실전 입력창 + 하단 지원자 대사창) -->
+      <!-- 하단 상호작용 영역 (Q 질문 바 → 지원자 대사창 → 선택지 3칸 / 실전 입력창) -->
       <div class="interview-interact">
         <!-- 현재 질문 요약 배너 -->
         <div class="interview-question-bar">
@@ -202,7 +209,21 @@
           <p id="interview-question-text" class="interview-q-text"></p>
         </div>
 
-        <!-- 중단: 가이드모드 3지선다 선택지 판 또는 실전모드 연습장 -->
+        <!-- 중단(선택지 위): 지원자 얼굴 + 민트 이름 탭 + 크림 대사창 -->
+        <div id="interview-dialogue-area" class="interview-dialogue-area" tabindex="0" role="button" aria-label="다음 대사 진행">
+          <div class="hero-portrait-wrap">
+            <img id="img-hero-face" class="hero-portrait" src="./assets/hero-face/neutral.png" width="66" height="86" alt="지원자">
+          </div>
+          <div class="dialogue-box-wrap">
+            <span id="dialogue-speaker-tab" class="dialogue-speaker-tab">지원자</span>
+            <div class="dialogue-box">
+              <p id="dialogue-text" class="dialogue-text"></p>
+              <span id="dialogue-next-arrow" class="dialogue-next-arrow" aria-hidden="true">▶</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 하단: 가이드모드 3지선다 선택지 판 또는 실전모드 연습장 -->
         <div id="interview-choices" class="interview-choices" role="group" aria-label="답변 선택지">
           <!-- JS에서 선택지 버튼 3개를 렌더링 -->
         </div>
@@ -223,20 +244,6 @@
               <span aria-hidden="true">▶</span>
               <span>답변 제출</span>
             </button>
-          </div>
-        </div>
-
-        <!-- 하단: 지원자 얼굴 + 민트 이름 탭 + 크림 대사창 -->
-        <div id="interview-dialogue-area" class="interview-dialogue-area" tabindex="0" role="button" aria-label="다음 대사 진행">
-          <div class="hero-portrait-wrap">
-            <img id="img-hero-face" class="hero-portrait" src="./assets/hero-face/neutral.png" width="66" height="86" alt="지원자">
-          </div>
-          <div class="dialogue-box-wrap">
-            <span id="dialogue-speaker-tab" class="dialogue-speaker-tab">지원자</span>
-            <div class="dialogue-box">
-              <p id="dialogue-text" class="dialogue-text"></p>
-              <span id="dialogue-next-arrow" class="dialogue-next-arrow" aria-hidden="true">▶</span>
-            </div>
           </div>
         </div>
       </div>

@@ -965,35 +965,36 @@ body[data-world="indoor"] .indoor-world-wings {
   background: var(--orange);
 }
 
-/* map-bg.png (216×324)를 --map-scale 배율로 중앙 정렬하여 바깥 map-bg-surround.png와 정확히 겹치게 한다 */
+/* map-bg.png (216×324)가 화면 처음부터 끝까지 빈틈없이 꽉 차도록 구성 */
 .map-street {
   position: relative;
   width: 100%;
+  height: 100%;
   min-height: 100%;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   overflow: hidden;
 }
 
 .map-canvas {
   position: relative;
-  width: var(--map-canvas-width);
-  height: var(--map-canvas-height);
-  flex: none;
-  border-inline: 3px solid var(--dark);
-  box-shadow: 0 0 0 2px var(--khaki), 0 10px 0 var(--dark);
+  width: 100%;
+  height: 100%;
+  min-height: var(--map-canvas-height);
+  flex: 1;
 }
 
 .map-bg-image {
   width: 100%;
   height: 100%;
+  object-fit: fill;
   image-rendering: pixelated;
   user-select: none;
   pointer-events: none;
 }
 
-/* 각 건물 핫스팟 노드 (216×324 원본 좌표 × --map-scale) */
+/* 각 건물 핫스팟 노드 (216×324 원본 비율 퍼센트 좌표) */
 .map-node {
   position: absolute;
   z-index: 2;
@@ -1005,34 +1006,34 @@ body[data-world="indoor"] .indoor-world-wings {
 
 /* 3번 회사(촤지피티): 우측 상단 건물 위치 */
 .map-node[data-slot="3"] {
-  top: calc(5px * var(--map-scale));
-  left: calc(116px * var(--map-scale));
-  width: calc(85px * var(--map-scale));
-  height: calc(73px * var(--map-scale));
+  top: calc(5 / 324 * 100%);
+  left: calc(116 / 216 * 100%);
+  width: calc(85 / 216 * 100%);
+  height: calc(73 / 324 * 100%);
 }
 
 /* 2번 회사(대충통운): 좌측 중단 건물 위치 */
 .map-node[data-slot="2"] {
-  top: calc(73px * var(--map-scale));
-  left: calc(36px * var(--map-scale));
-  width: calc(81px * var(--map-scale));
-  height: calc(78px * var(--map-scale));
+  top: calc(73 / 324 * 100%);
+  left: calc(36 / 216 * 100%);
+  width: calc(81 / 216 * 100%);
+  height: calc(78 / 324 * 100%);
 }
 
 /* 1번 회사(쟤당치킨): 우측 중하단 건물 위치 */
 .map-node[data-slot="1"] {
-  top: calc(159px * var(--map-scale));
-  left: calc(82px * var(--map-scale));
-  width: calc(86px * var(--map-scale));
-  height: calc(73px * var(--map-scale));
+  top: calc(159 / 324 * 100%);
+  left: calc(82 / 216 * 100%);
+  width: calc(86 / 216 * 100%);
+  height: calc(73 / 324 * 100%);
 }
 
 /* 취업센터(i 건물): 좌측 하단 건물 위치 */
 .map-node.is-career {
-  top: calc(253px * var(--map-scale));
-  left: calc(9px * var(--map-scale));
-  width: calc(56px * var(--map-scale));
-  height: calc(58px * var(--map-scale));
+  top: calc(253 / 324 * 100%);
+  left: calc(9 / 216 * 100%);
+  width: calc(56 / 216 * 100%);
+  height: calc(58 / 324 * 100%);
 }
 
 .map-building-btn {
@@ -1129,11 +1130,11 @@ body[data-world="indoor"] .indoor-world-wings {
   background: var(--cream);
 }
 
-/* 주인공 배치: 맵 캔버스(216×324 좌표계) 위에서 도로를 따라 걸어 이동한다 */
+/* 주인공 배치: 맵 캔버스(216×324 비율 좌표계) 위에서 도로를 따라 걸어 이동한다 */
 .map-hero {
   position: absolute;
-  left: calc(var(--hero-x, 78px) * var(--map-scale));
-  top: calc(var(--hero-y, 202px) * var(--map-scale));
+  left: calc(var(--hero-x, 78) / 216 * 100%);
+  top: calc(var(--hero-y, 202) / 324 * 100%);
   z-index: 6;
   width: 32px;
   height: 64px;
@@ -1288,10 +1289,10 @@ body[data-world="indoor"] .indoor-world-wings {
   user-select: none;
 }
 
-/* 상단 사무실 무대 영역 (높이 44%, office-bg.png 상단 책상선과 일치) */
+/* 상단 사무실 무대 영역 (높이 46%, office-bg.png 상단 책상선과 일치) */
 .interview-stage {
   position: relative;
-  flex: 0 0 44%;
+  flex: 0 0 46%;
   width: 100%;
   overflow: hidden;
   background: var(--olive);
@@ -1311,21 +1312,21 @@ body[data-world="indoor"] .indoor-world-wings {
 
 .interview-mini-logo {
   position: absolute;
-  top: max(calc(var(--safe-top) + 8px), 10px);
-  left: 10px;
+  top: max(calc(var(--safe-top) + 14px), 16px);
+  left: 12px;
   z-index: 4;
-  width: 144px;
-  height: 60px;
+  width: 112px;
+  height: 46px;
   pointer-events: none;
 }
 
 /* 우측 상단 레트로 진행 상태창 (interview.png.png 시안) */
 .interview-status-win {
   position: absolute;
-  top: max(calc(var(--safe-top) + 8px), 10px);
-  right: 10px;
+  top: max(calc(var(--safe-top) + 14px), 16px);
+  right: 12px;
   z-index: 5;
-  width: 152px;
+  width: 146px;
   background: var(--dark);
   border: 2px solid var(--dark);
   box-shadow:
@@ -1337,7 +1338,7 @@ body[data-world="indoor"] .indoor-world-wings {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3px 6px;
+  padding: 2px 6px;
   color: var(--dark);
   background: var(--mint);
   border-bottom: 2px solid var(--dark);
@@ -1368,15 +1369,15 @@ body[data-world="indoor"] .indoor-world-wings {
 .interview-status-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 6px 8px 8px;
+  gap: 4px;
+  padding: 4px 8px 5px;
   color: var(--cream);
 }
 
 .interview-stage-label {
   font-size: 12px;
   font-weight: bold;
-  line-height: 1.2;
+  line-height: 1.15;
   white-space: nowrap;
 }
 
@@ -1388,8 +1389,8 @@ body[data-world="indoor"] .indoor-world-wings {
 }
 
 .interview-step-node {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   background: var(--olive);
   border: 2px solid var(--cream);
 }
@@ -1408,11 +1409,11 @@ body[data-world="indoor"] .indoor-world-wings {
   background: var(--cream);
 }
 
-/* 면접관 2명 배치 (책상 바로 위) */
+/* 면접관 2명 배치 (상단 말풍선과 머리 사이에 충분한 간격을 확보) */
 .interviewers-row {
   position: absolute;
   inset-inline: 18px;
-  bottom: 6px;
+  bottom: -38px;
   z-index: 3;
   display: flex;
   align-items: flex-end;
@@ -1433,14 +1434,15 @@ body[data-world="indoor"] .indoor-world-wings {
 }
 
 .interviewer-sprite {
-  width: 152px;
-  height: 192px;
+  width: 124px;
+  height: 158px;
 }
 
 .interviewer-plate {
   position: relative;
   z-index: 4;
-  margin-top: -14px;
+  margin-top: -38px;
+  margin-bottom: 40px;
   padding: 3px 16px;
   color: var(--dark);
   background: var(--cream);
@@ -1456,26 +1458,104 @@ body[data-world="indoor"] .indoor-world-wings {
   background: var(--orange);
 }
 
-/* 하단 인터랙션 영역 (56%) */
+/* 과장·부장 말풍선: 면접관 머리 바로 위(닿지 않을 정도의 가까운 간격)에 배치 */
+.interviewer-bubble {
+  position: absolute;
+  top: auto;
+  bottom: 132px;
+  inset-inline: 14px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 7px 26px 7px 10px;
+  color: var(--dark);
+  background: var(--cream);
+  border: 3px solid var(--dark);
+  box-shadow:
+    inset 0 0 0 2px var(--cream),
+    inset 0 0 0 4px var(--khaki),
+    0 4px 0 var(--dark);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.interviewer-bubble[hidden] {
+  display: none;
+}
+
+.interviewer-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  width: 12px;
+  height: 8px;
+  background: var(--cream);
+  border-right: 3px solid var(--dark);
+  border-bottom: 3px solid var(--dark);
+  transform: skewX(-20deg);
+}
+
+.interviewer-bubble.is-left::after {
+  left: 24%;
+}
+
+.interviewer-bubble.is-right::after {
+  right: 24%;
+  transform: skewX(20deg);
+}
+
+.interviewer-bubble-speaker {
+  flex: none;
+  padding: 3px 8px;
+  color: var(--cream);
+  background: var(--orange);
+  border: 2px solid var(--dark);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1;
+  text-shadow:
+    -1px 0 var(--dark),
+    1px 0 var(--dark),
+    0 -1px var(--dark),
+    0 1px var(--dark);
+}
+
+.interviewer-bubble-text {
+  font-size: 13.5px;
+  font-weight: bold;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+/* 하단 인터랙션 영역 (54%: 화면 맨 아래까지 빈 공간 없이 꽉 채워 통일감 유지) */
 .interview-interact {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px 14px max(calc(var(--safe-bottom) + 12px), 12px);
+  gap: 10px;
+  padding: 12px 14px max(calc(var(--safe-bottom) + 14px), 16px);
   background: var(--dark);
 }
 
+.interview-dialogue-area.is-dimmed {
+  opacity: 0.75;
+}
+
+/* 문제 박스: 선택지 글자보다 확실히 크고 눈에 띄도록 폰트 확대 */
 .interview-question-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  gap: 10px;
+  padding: 10px 12px;
   color: var(--cream);
   background: var(--olive);
-  border: 2px solid var(--khaki);
-  box-shadow: 0 2px 0 var(--dark);
+  border: 2px solid var(--cream);
+  box-shadow:
+    0 0 0 2px var(--dark),
+    0 4px 0 var(--dark);
 }
 
 .interview-q-badge {
@@ -1483,8 +1563,8 @@ body[data-world="indoor"] .indoor-world-wings {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   color: var(--dark);
   background: var(--orange);
   border: 2px solid var(--dark);
@@ -1494,17 +1574,24 @@ body[data-world="indoor"] .indoor-world-wings {
 }
 
 .interview-q-text {
-  font-size: 13px;
-  font-weight: bold;
-  line-height: 1.35;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: normal;
+  line-height: 1.3;
+  letter-spacing: 0.3px;
+  text-shadow:
+    -1px 0 var(--dark),
+    1px 0 var(--dark),
+    0 -1px var(--dark),
+    0 1px var(--dark);
   word-break: keep-all;
 }
 
-/* 중단: 선택지 3칸 (올리브 판 안 3칸, 고른 줄만 오렌지 표시) */
+/* 선택지 3칸: 하단 끝까지 균형 있게 채움 */
 .interview-choices {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   gap: 8px;
   flex: 1;
 }
@@ -1514,11 +1601,12 @@ body[data-world="indoor"] .indoor-world-wings {
 }
 
 .interview-choice-btn {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  min-height: 46px;
+  min-height: 44px;
   padding: 8px 12px;
   color: var(--cream);
   background: var(--olive);
@@ -1644,13 +1732,14 @@ body[data-world="indoor"] .indoor-world-wings {
   display: none;
 }
 
-/* 하단: 지원자 얼굴 + 민트 이름 탭 + 크림 대사창 */
+/* 선택지 바로 위: 지원자 얼굴 + 민트 이름 탭 + 크림 대사창 */
 .interview-dialogue-area {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  min-height: 108px;
+  min-height: 106px;
+  margin-top: 2px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1665,13 +1754,13 @@ body[data-world="indoor"] .indoor-world-wings {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  width: 72px;
-  height: 92px;
+  width: 86px;
+  height: 108px;
 }
 
 .hero-portrait {
-  width: 66px;
-  height: 86px;
+  width: 84px;
+  height: 108px;
 }
 
 .dialogue-box-wrap {
@@ -1711,8 +1800,8 @@ body[data-world="indoor"] .indoor-world-wings {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 82px;
-  padding: 12px 28px 12px 14px;
+  min-height: 74px;
+  padding: 10px 28px 10px 14px;
   color: var(--dark);
   background: var(--cream);
   border: 3px solid var(--dark);
@@ -1927,12 +2016,27 @@ body[data-world="indoor"] .indoor-world-wings {
 }
 
 .result-review-list {
+  flex: 1;
+  min-height: 0;
   margin: 0;
-  padding: 0;
+  padding: 0 2px 0 0;
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  overflow-y: auto;
+}
+
+.result-review-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.result-review-list::-webkit-scrollbar-track {
+  background: var(--cream);
+}
+
+.result-review-list::-webkit-scrollbar-thumb {
+  background: var(--khaki);
 }
 
 .result-review-item {
@@ -1980,6 +2084,16 @@ body[data-world="indoor"] .indoor-world-wings {
   .interviewer-sprite {
     width: 76px;
     height: 96px;
+  }
+
+  .interviewer-bubble {
+    bottom: 84px;
+    min-height: 52px;
+    padding: 8px 24px 8px 10px;
+  }
+
+  .interviewer-bubble-text {
+    font-size: 12.5px;
   }
 
   .interview-choice-btn {
