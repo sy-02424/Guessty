@@ -1331,6 +1331,8 @@ function showScreen(name, isIndoor = false) {
     document.body.dataset.world = 'indoor';
   } else if (name === 'map') {
     document.body.dataset.world = 'map';
+  } else if (name === 'intro') {
+    document.body.dataset.world = 'intro';
   } else {
     document.body.dataset.world = 'title';
   }

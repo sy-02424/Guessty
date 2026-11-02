@@ -106,45 +106,16 @@ p {
   );
 }
 
-/* 맵·실내 화면은 중앙 430px 경계부터 바깥으로 계단식 픽셀 암막을 겹겹이 쌓아 스타트 화면처럼 깊이감 있고 어둡게 눌러준다. */
+/* 인트로·맵·실내(면접·결과) 화면: 양옆 픽셀 그라데이션을 없애고 균일한 암막 + 도트 무늬만 깔아 깔끔하게 구분한다. */
+body[data-world="intro"] .title-world::before,
+body[data-world="intro"] .title-world::after,
 body[data-world="map"] .title-world::before,
-body[data-world="indoor"] .title-world::before {
-  background:
-    linear-gradient(
-      to left,
-      rgb(47 51 38 / 0.32) 0px,
-      rgb(47 51 38 / 0.32) 8px,
-      rgb(47 51 38 / 0.50) 8px,
-      rgb(47 51 38 / 0.50) 18px,
-      rgb(47 51 38 / 0.66) 18px,
-      rgb(47 51 38 / 0.66) 32px,
-      rgb(47 51 38 / 0.78) 32px,
-      rgb(47 51 38 / 0.78) 52px,
-      rgb(47 51 38 / 0.86) 52px,
-      rgb(47 51 38 / 0.86) 80px,
-      rgb(47 51 38 / 0.92) 80px,
-      rgb(47 51 38 / 0.92) 100%
-    );
-}
-
 body[data-world="map"] .title-world::after,
+body[data-world="indoor"] .title-world::before,
 body[data-world="indoor"] .title-world::after {
-  background:
-    linear-gradient(
-      to right,
-      rgb(47 51 38 / 0.32) 0px,
-      rgb(47 51 38 / 0.32) 8px,
-      rgb(47 51 38 / 0.50) 8px,
-      rgb(47 51 38 / 0.50) 18px,
-      rgb(47 51 38 / 0.66) 18px,
-      rgb(47 51 38 / 0.66) 32px,
-      rgb(47 51 38 / 0.78) 32px,
-      rgb(47 51 38 / 0.78) 52px,
-      rgb(47 51 38 / 0.86) 52px,
-      rgb(47 51 38 / 0.86) 80px,
-      rgb(47 51 38 / 0.92) 80px,
-      rgb(47 51 38 / 0.92) 100%
-    );
+  background-color: rgb(47 51 38 / 0.58);
+  background-image: radial-gradient(rgb(47 51 38 / 0.38) 1px, transparent 0);
+  background-size: 4px 4px;
 }
 
 .title-world img {
@@ -171,49 +142,11 @@ body[data-world="indoor"] .title-world::after {
   transform: translate(-50%, -50%);
 }
 
-/* 맵 화면: 양옆 이미지를 쓰지 않고 어두운 카키/올리브 단색 + 픽셀 도트 질감 위에 계단식 픽셀 그라데이션 막을 씌워 중앙 맵을 또렷하게 살린다. */
-body[data-world="map"] .title-world {
-  background-color: var(--olive);
-  background-image:
-    conic-gradient(
-      rgb(47 51 38 / 0.52) 90deg,
-      transparent 90deg 180deg,
-      rgb(47 51 38 / 0.52) 180deg 270deg,
-      transparent 270deg
-    );
-  background-size: 4px 4px;
-}
-
-body[data-world="map"] .title-world .world-img-title,
-body[data-world="map"] .title-world .world-img-map {
-  display: none;
-}
-
-/* 실내 화면(면접·결과): 사무실 벽면·창틀·책상 높이가 양옆으로도 이어진다. */
-body[data-world="indoor"] .title-world {
-  background: var(--olive);
-}
-
-body[data-world="indoor"] .title-world img {
-  display: none;
-}
-
+/* 맵·실내 화면도 양옆에 처음 타이틀 배경(world-img-title)을 그대로 유지한다. */
+body[data-world="map"] .title-world .world-img-map,
+body[data-world="indoor"] .title-world .world-img-map,
 body[data-world="indoor"] .indoor-world-wings {
-  position: absolute;
-  inset: 0;
-  display: block;
-  background:
-    linear-gradient(
-      to bottom,
-      var(--olive) 0%,
-      var(--olive) 44%,
-      var(--dark) 44%,
-      var(--dark) 45.5%,
-      var(--khaki) 45.5%,
-      var(--khaki) 48%,
-      var(--dark) 48%,
-      var(--dark) 100%
-    );
+  display: none;
 }
 
 /* 모바일 폭의 투명한 조작 영역. 중앙을 별도 배경이나 테두리로 나누지 않는다. */
@@ -1458,11 +1391,11 @@ body[data-world="indoor"] .indoor-world-wings {
   background: var(--orange);
 }
 
-/* 과장·부장 말풍선: 면접관 머리 바로 위(닿지 않을 정도의 가까운 간격)에 배치 */
+/* 과장·부장 말풍선: 면접관 머리 위 ? 아이콘(148px)과 상단 STAGE 상태창 사이의 공간에 배치 */
 .interviewer-bubble {
   position: absolute;
   top: auto;
-  bottom: 132px;
+  bottom: 158px;
   inset-inline: 14px;
   z-index: 6;
   display: flex;
