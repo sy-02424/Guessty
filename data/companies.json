@@ -1,5 +1,5 @@
 [
-  { "id": "chicken", "name": "쟤당치킨", "industry": "치킨 프랜차이즈", "order": 1, "building": "company-chicken.png", "outfit": "chicken", "greeting": "[문구 필요]" },
-  { "id": "delivery", "name": "대충통운", "industry": "택배·물류", "order": 2, "building": "company-box.png", "outfit": "delivery", "greeting": "[문구 필요]" },
-  { "id": "it", "name": "촤지피티", "industry": "IT", "order": 3, "building": "company-laptop.png", "outfit": "it", "greeting": "[문구 필요]" }
+  { "id": "chicken", "name": "쟤당치킨", "industry": "치킨 프랜차이즈", "order": 1, "building": "company-chicken.png", "outfit": "chicken", "greeting": "쟤당치킨입니다. 오늘 면접은 바삭하게 진행하겠습니다." },
+  { "id": "delivery", "name": "대충통운", "industry": "택배·물류", "order": 2, "building": "company-box.png", "outfit": "delivery", "greeting": "대충통운입니다. 이름과 달리 면접은 꼼꼼하게 보겠습니다." },
+  { "id": "it", "name": "촤지피티", "industry": "IT", "order": 3, "building": "company-laptop.png", "outfit": "it", "greeting": "촤지피티입니다. 오늘 답변은 직접 생각해서 해 주시면 됩니다." }
 ]
