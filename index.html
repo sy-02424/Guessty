@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="./css/style.css">
   <script src="./js/main.js" defer></script>
 </head>
-<body>
+<body class="world-outdoor">
   <!-- 모바일과 PC가 같은 한 장의 거리 배경을 공유한다. -->
   <div class="title-world" aria-hidden="true">
     <img id="title-world-image" src="./assets/title-bg-surround.png" width="1152" height="384" alt="" fetchpriority="high">
@@ -34,13 +34,61 @@
       </div>
 
       <footer class="title-actions">
-        <!-- 첫 화면 디자인 단계: 인트로 연결은 후속 작업에서 추가한다. -->
         <button type="button" id="start-button" class="start-button">
           <span class="start-arrow" aria-hidden="true">▶</span>
           <span>PRESS START</span>
           <span class="start-arrow" aria-hidden="true">◀</span>
         </button>
       </footer>
+    </section>
+
+    <section id="screen-intro" class="screen intro-screen" aria-labelledby="intro-title" tabindex="0" hidden>
+      <div class="intro-backdrop" aria-hidden="true"></div>
+
+      <div class="intro-layout">
+        <article class="intro-window">
+          <div class="intro-titlebar" aria-hidden="true">
+            <span class="intro-titlebar-name">GUESSTY.EXE</span>
+            <div class="intro-titlebar-controls">
+              <span class="intro-win-btn">_</span>
+              <span class="intro-win-btn">✕</span>
+            </div>
+          </div>
+
+          <div class="intro-content">
+            <header class="intro-header">
+              <h2 id="intro-title" class="intro-title">게스티메이션</h2>
+              <p class="intro-term">guess(짐작) + estimation(추정)</p>
+            </header>
+
+            <div class="intro-body">
+              <p class="intro-paragraph">직접 계산하기 어려운 문제도<br>주어진 질문을 분석하고 가정을 세워<br>답을 <strong class="intro-accent">'합리적으로'</strong> 추정하는 방법이에요</p>
+
+              <div class="intro-example">
+                <p class="intro-paragraph">예를 들어<br><strong class="intro-accent">"한국에 치킨집은 몇 개?"</strong>라는 질문에<br><span class="intro-flow">인구 → 치킨 먹는 횟수 → 가게당 판매량</span><br>이렇게 쪼개서 계산하면<br>그럴듯한 숫자가 나와요</p>
+              </div>
+
+              <p class="intro-paragraph intro-closing">마케터, 컨설턴트 등 직무 면접 단골 문제,<br><strong class="intro-accent">GUESSTY</strong>에서 회사를 돌며<br>직접 연습해봐요</p>
+            </div>
+          </div>
+
+          <div class="intro-statusbar" aria-hidden="true">
+            <span class="intro-statusbar-pattern"></span>
+            <span class="intro-statusbar-grip"></span>
+          </div>
+        </article>
+
+        <div class="intro-footer">
+          <div class="intro-touch-btn" aria-hidden="true">
+            <span>▶ 화면을 터치하세요</span>
+          </div>
+          <p class="intro-notice">등장 회사는 모두 가상이며 실제 기업과 무관합니다</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-map" class="screen map-screen" aria-label="회사 거리 맵" hidden>
+      <!-- ③ 맵 단계에서 실제 거리·건물 UI로 채운다 -->
     </section>
   </main>
 </body>

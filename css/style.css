@@ -37,6 +37,10 @@ body {
   font-family: var(--font-body);
 }
 
+body.world-indoor {
+  background: var(--dark);
+}
+
 img {
   display: block;
   image-rendering: pixelated;
@@ -54,6 +58,57 @@ p {
   overflow: hidden;
   background: var(--cream);
   pointer-events: none;
+}
+
+/* 야외 화면: PC에서 가운데 430px 칸 바깥 양옆에만 반투명 어두운 막을 씌운다. */
+body.world-outdoor .title-world::before,
+body.world-outdoor .title-world::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: max(0px, calc((100vw - 430px) / 2));
+  z-index: 1;
+}
+
+body.world-outdoor .title-world::before {
+  left: 0;
+  /* 기본(경계 A): 픽셀 계단식 4단계 밴딩 */
+  background: linear-gradient(
+    to left,
+    rgb(47 51 38 / 0.08) 0px,
+    rgb(47 51 38 / 0.08) 8px,
+    rgb(47 51 38 / 0.18) 8px,
+    rgb(47 51 38 / 0.18) 18px,
+    rgb(47 51 38 / 0.28) 18px,
+    rgb(47 51 38 / 0.28) 30px,
+    rgb(47 51 38 / 0.38) 30px,
+    rgb(47 51 38 / 0.38) 100%
+  );
+}
+
+body.world-outdoor .title-world::after {
+  right: 0;
+  background: linear-gradient(
+    to right,
+    rgb(47 51 38 / 0.08) 0px,
+    rgb(47 51 38 / 0.08) 8px,
+    rgb(47 51 38 / 0.18) 8px,
+    rgb(47 51 38 / 0.18) 18px,
+    rgb(47 51 38 / 0.28) 18px,
+    rgb(47 51 38 / 0.28) 30px,
+    rgb(47 51 38 / 0.38) 30px,
+    rgb(47 51 38 / 0.38) 100%
+  );
+}
+
+/* 실내 화면(면접·결과): 바깥 배경은 --dark 단색으로 전환한다. */
+body.world-indoor .title-world {
+  background: var(--dark);
+}
+
+body.world-indoor .title-world img {
+  display: none;
 }
 
 .title-world img {
@@ -109,26 +164,31 @@ p {
   height: 160px;
 }
 
+/* 부제 기본(1번): 어두운 픽셀 배지 */
 .title-subtitle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
   max-width: calc(100% - 24px);
-  padding: 2px 8px;
-  color: var(--dark);
-  background: var(--cream);
-  font-size: 14px;
-  line-height: 1.6;
+  padding: 5px 14px;
+  color: var(--cream);
+  background: var(--dark);
+  border: 2px solid var(--khaki);
+  box-shadow: 0 3px 0 var(--dark);
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1.4;
+  letter-spacing: 0.5px;
   text-align: center;
   white-space: nowrap;
 }
 
 .title-subtitle::before,
 .title-subtitle::after {
-  content: '';
-  flex: 0 0 18px;
-  height: 2px;
-  background: var(--khaki);
+  content: '▪';
+  color: var(--orange);
+  font-size: 12px;
+  line-height: 1;
 }
 
 .title-hero {
@@ -168,19 +228,19 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  min-height: 56px;
+  gap: 8px;
+  min-height: 64px;
   margin: 0;
-  padding: 8px 6px;
+  padding: 8px 4px;
   border: 0;
   border-radius: 0;
   color: var(--orange);
   background: transparent;
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 48px;
   font-weight: bold;
   line-height: 1;
-  letter-spacing: 2px;
+  letter-spacing: 0;
   white-space: nowrap;
   text-shadow:
     -2px 0 var(--dark),
@@ -192,6 +252,7 @@ p {
     -1px 1px var(--dark),
     1px 1px var(--dark),
     0 3px var(--dark);
+  animation: start-blink 2.6s steps(1, end) infinite;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -203,8 +264,22 @@ p {
   letter-spacing: 0;
 }
 
+/* 켜져 있는 시간을 길게(76%), 꺼져 있는 시간을 짧게(24%) 두어 여유롭게 깜빡인다. */
+@keyframes start-blink {
+  0%,
+  76% {
+    visibility: visible;
+  }
+  76.1%,
+  100% {
+    visibility: hidden;
+  }
+}
+
 .start-button:active,
 .start-button.is-pressed {
+  animation: none;
+  visibility: visible;
   transform: translateY(2px);
 }
 
@@ -239,6 +314,15 @@ p {
   .title-subtitle::before,
   .title-subtitle::after {
     flex-basis: 12px;
+  }
+
+  .start-button {
+    gap: 6px;
+    font-size: 32px;
+  }
+
+  .start-arrow {
+    font-size: 32px;
   }
 }
 
@@ -310,3 +394,308 @@ p {
     bottom: calc(8px + var(--safe-bottom));
   }
 }
+
+/* ② 인트로 화면 */
+.intro-screen {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.intro-screen:focus-visible {
+  outline: 2px dashed var(--orange);
+  outline-offset: -6px;
+}
+
+/* 기본 배경(도트딤): 거리 배경이 은은하게 비치면서 창이 또렷하게 보이도록 픽셀 도트 망점을 깐다. */
+.intro-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgb(47 51 38 / 0.42);
+  background-image: radial-gradient(rgb(47 51 38 / 0.35) 1px, transparent 0);
+  background-size: 4px 4px;
+  pointer-events: none;
+}
+
+.intro-layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  height: 100%;
+  padding: max(calc(var(--safe-top) + 20px), 24px) 20px max(calc(var(--safe-bottom) + 16px), 20px);
+}
+
+/* 레트로 OS 윈도우 (GUESSTY.EXE) */
+.intro-window {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  color: var(--dark);
+  background: var(--cream);
+  border: 3px solid var(--dark);
+  box-shadow:
+    inset 0 0 0 2px var(--cream),
+    inset 0 0 0 4px var(--khaki),
+    0 8px 0 var(--dark);
+}
+
+.intro-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 4px 4px 0;
+  padding: 6px 10px;
+  color: var(--cream);
+  background: var(--olive);
+  border-bottom: 2px solid var(--dark);
+}
+
+.intro-titlebar-name {
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.intro-titlebar-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.intro-win-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--dark);
+  background: var(--cream);
+  border: 2px solid var(--dark);
+  font-family: var(--font-display);
+  font-size: 12px;
+  line-height: 1;
+}
+
+.intro-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 20px 20px;
+  text-align: center;
+}
+
+.intro-statusbar {
+  display: flex;
+  align-items: center;
+  height: 16px;
+  margin: 0 4px 4px;
+  border-top: 2px solid var(--khaki);
+  background: var(--cream);
+}
+
+.intro-statusbar-pattern {
+  flex: 1;
+  height: 100%;
+  background-image: conic-gradient(
+    var(--khaki) 90deg,
+    transparent 90deg 180deg,
+    var(--khaki) 180deg 270deg,
+    transparent 270deg
+  );
+  background-size: 4px 4px;
+  opacity: 0.35;
+}
+
+.intro-statusbar-grip {
+  width: 28px;
+  height: 100%;
+  border-left: 2px solid var(--khaki);
+  background: repeating-linear-gradient(
+    to right,
+    var(--cream) 0px,
+    var(--cream) 3px,
+    var(--dark) 3px,
+    var(--dark) 5px
+  );
+}
+
+.intro-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--khaki);
+}
+
+.intro-title {
+  margin: 0;
+  color: var(--dark);
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1.15;
+  letter-spacing: 1px;
+}
+
+.intro-term {
+  color: var(--olive);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.4;
+}
+
+.intro-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.intro-paragraph {
+  color: var(--dark);
+  font-size: 15px;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+.intro-accent {
+  color: var(--orange);
+  font-weight: bold;
+}
+
+/* 예시칸: 깔끔한 크림 노트 + 카키 포인트 테두리 */
+.intro-example {
+  width: 100%;
+  padding: 14px 12px;
+  background: var(--cream);
+  border: 2px solid var(--khaki);
+  box-shadow: inset 0 0 0 2px var(--cream), 0 3px 0 var(--khaki);
+}
+
+.intro-flow {
+  display: inline-block;
+  margin: 6px 0;
+  padding: 4px 10px;
+  color: var(--cream);
+  background: var(--olive);
+  border: 2px solid var(--dark);
+  font-weight: bold;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.intro-closing {
+  font-weight: normal;
+}
+
+.intro-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+/* 하단 분리형 주황색 입체 버튼 (바 높이는 유지하면서 내부 글자 확대) */
+.intro-touch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  color: var(--cream);
+  background: var(--orange);
+  border: 3px solid var(--dark);
+  box-shadow:
+    inset 0 2px 0 var(--cream),
+    inset 0 -3px 0 var(--olive),
+    0 5px 0 var(--dark);
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 1px;
+  text-shadow:
+    -2px 0 var(--dark),
+    2px 0 var(--dark),
+    0 -2px var(--dark),
+    0 2px var(--dark),
+    -1px -1px var(--dark),
+    1px -1px var(--dark),
+    -1px 1px var(--dark),
+    1px 1px var(--dark),
+    0 2px var(--dark);
+}
+
+.intro-touch-btn span {
+  animation: start-blink 2.6s steps(1, end) infinite;
+}
+
+.intro-notice {
+  padding: 6px 14px;
+  color: var(--cream);
+  background: var(--dark);
+  border: 2px solid var(--khaki);
+  box-shadow: 0 2px 0 var(--dark);
+  font-size: 13px;
+  font-weight: normal;
+  line-height: 1.4;
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
+@media (max-height: 700px) {
+  .intro-layout {
+    gap: 10px;
+    padding: max(calc(var(--safe-top) + 10px), 12px) 16px max(calc(var(--safe-bottom) + 8px), 10px);
+  }
+
+  .intro-content {
+    gap: 12px;
+    padding: 14px 14px 12px;
+  }
+
+  .intro-header {
+    padding-bottom: 10px;
+  }
+
+  .intro-body {
+    gap: 10px;
+  }
+
+  .intro-paragraph {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .intro-example {
+    padding: 10px 8px;
+  }
+
+  .intro-flow {
+    margin: 4px 0;
+    font-size: 12px;
+  }
+
+  .intro-touch-btn {
+    min-height: 42px;
+    padding: 8px 12px;
+    font-size: 18px;
+  }
+
+  .intro-notice {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+}
+
+
+
