@@ -91,12 +91,12 @@ p {
 
 .title-heading {
   position: absolute;
-  top: max(calc(var(--safe-top) + 24px), clamp(44px, 12dvh, 112px));
+  top: max(calc(var(--safe-top) + 20px), clamp(36px, 9.5dvh, 96px));
   inset-inline: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
 }
 
 .title-logo {
@@ -114,9 +114,11 @@ p {
   align-items: center;
   gap: 10px;
   max-width: calc(100% - 24px);
+  padding: 2px 8px;
   color: var(--dark);
+  background: var(--cream);
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 1.6;
   text-align: center;
   white-space: nowrap;
 }
@@ -124,7 +126,7 @@ p {
 .title-subtitle::before,
 .title-subtitle::after {
   content: '';
-  flex: 0 0 14px;
+  flex: 0 0 18px;
   height: 2px;
   background: var(--khaki);
 }
@@ -132,7 +134,7 @@ p {
 .title-hero {
   position: absolute;
   left: 50%;
-  bottom: calc(128px + var(--safe-bottom));
+  bottom: calc(116px + var(--safe-bottom));
   width: 64px;
   height: 128px;
   transform: translateX(-50%);
@@ -147,7 +149,7 @@ p {
 
 .title-hero-shadow {
   position: absolute;
-  inset-inline: -4px;
+  inset-inline: -6px;
   bottom: -2px;
   height: 12px;
   background: var(--dark);
@@ -157,7 +159,7 @@ p {
 .title-actions {
   position: absolute;
   inset-inline: 8px;
-  bottom: calc(36px + var(--safe-bottom));
+  bottom: calc(28px + var(--safe-bottom));
   display: flex;
   justify-content: center;
 }
@@ -167,9 +169,9 @@ p {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  min-height: 60px;
+  min-height: 56px;
   margin: 0;
-  padding: 8px 4px;
+  padding: 8px 6px;
   border: 0;
   border-radius: 0;
   color: var(--orange);
@@ -181,10 +183,15 @@ p {
   letter-spacing: 2px;
   white-space: nowrap;
   text-shadow:
-    -1px 0 var(--dark),
-    1px 0 var(--dark),
-    0 -1px var(--dark),
-    0 1px var(--dark);
+    -2px 0 var(--dark),
+    2px 0 var(--dark),
+    0 -2px var(--dark),
+    0 2px var(--dark),
+    -1px -1px var(--dark),
+    1px -1px var(--dark),
+    -1px 1px var(--dark),
+    1px 1px var(--dark),
+    0 3px var(--dark);
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;

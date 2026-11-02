@@ -95,11 +95,60 @@ def flatten_sky(image):
         raise ValueError("Panorama's top edge must match the CSS sky")
 
 
+def reframe_panorama(source):
+    """Bring the central street facades closer to match the portrait mockup framing
+    while seamlessly continuing into the outer wings."""
+    src_w, src_h = source.size
+    center_x = src_w / 2.0
+    out_w, out_h = 1152, 384
+    # Vertical shift (-24px in 724px source, ~13px in 384px output) raises the
+    # street horizon slightly to match the portrait mockup's road proportions.
+    y_shift = round(src_h * 0.033)
+    padded = Image.new("RGB", (src_w, src_h + y_shift), source.getpixel((0, 0)))
+    padded.paste(source, (0, 0))
+    # Map output x in [-576, 576] to source x in [-1086, 1086]:
+    # In the central street zone (|u| <= 0.19, i.e. central 430px at 2x),
+    # sample 1.30x wider so the awnings, chicken banner, lamp posts, and
+    # tree trunks sit comfortably inside the mobile viewport, then ease
+    # smoothly to the outer edges without any seam.
+    u_knot = 0.19
+    s_knot = 0.247
+    strips = []
+    for ox in range(out_w):
+        u = (ox + 0.5 - out_w / 2.0) / (out_w / 2.0)
+        au = abs(u)
+        if au <= u_knot:
+            t = au / u_knot
+            su = s_knot * t
+        else:
+            t = (au - u_knot) / (1.0 - u_knot)
+            # Hermite blend from slope (s_knot / u_knot) to endpoints
+            m0 = (s_knot / u_knot) * (1.0 - u_knot)
+            m1 = 1.0 - s_knot
+            h00 = 2 * t ** 3 - 3 * t ** 2 + 1
+            h10 = t ** 3 - 2 * t ** 2 + t
+            h01 = -2 * t ** 3 + 3 * t ** 2
+            h11 = t ** 3 - t ** 2
+            su = s_knot * h00 + m0 * h10 + 1.0 * h01 + m1 * h11
+        if u < 0:
+            su = -su
+        sx = center_x + su * (src_w / 2.0)
+        x0 = max(0, min(src_w - 2, int(sx - 1)))
+        x1 = min(src_w, max(x0 + 1, int(sx + 1)))
+        col = padded.crop((x0, y_shift, x1, src_h + y_shift)).resize(
+            (1, out_h), Image.Resampling.BOX)
+        strips.append(col)
+    small = Image.new("RGB", (out_w, out_h))
+    for ox, col in enumerate(strips):
+        small.paste(col, (ox, 0))
+    return small
+
+
 def convert_scene():
     source = Image.open(RAW / "title-panorama-v2-source.png").convert("RGB")
     if abs(source.width / source.height - 3) > 0.01:
         raise ValueError("Panorama must retain its 3:1 framing")
-    small = source.resize((1152, 384), Image.Resampling.BOX)
+    small = reframe_panorama(source)
     flatten_sky(small)
     reserved = (CREAM, KHAKI, DARK, ORANGE)
     samples = [p for p in small.get_flattened_data() if p != CREAM]
@@ -107,8 +156,8 @@ def convert_scene():
     output = small.quantize(palette=palette_image(colors), dither=Image.Dither.NONE)
     if len(output.getcolors(256)) > 32 or "transparency" in output.info:
         raise ValueError("Panorama must stay opaque and <=32 colors")
-    output.save(ROOT / "assets" / "title-scene-v2.png", optimize=True)
-    print(f"assets/title-scene-v2.png: 1152x384, {len(output.getcolors(256))} colors, opaque")
+    output.save(ROOT / "assets" / "title-bg-surround.png", optimize=True)
+    print(f"assets/title-bg-surround.png: 1152x384, {len(output.getcolors(256))} colors, opaque")
 
 
 if __name__ == "__main__":
