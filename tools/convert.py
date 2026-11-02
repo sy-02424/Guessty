@@ -6,7 +6,8 @@ From the repository root:
     python tools/convert.py --group interview
 
 Paths are relative to this file, so invocation from another directory also works.
-Logo: fixed DESIGN.md six colors. All 29 characters share <=16 original colors
+Logo: user-approved <=16 original colors, preserving layered brand shading.
+All 29 characters share <=16 original colors
 from the base/company sheets, including the existing full-body hero.
 Buildings: original 16 colors plus five approved, locally masked corrections
 (<=21 shared colors). All palette conversions use no dithering.
@@ -31,7 +32,7 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "assets" / "raw"
 PREVIEW = RAW / "preview"
-# DESIGN.md sections 2 and 4: the fixed six-color palette is LOGO ONLY.
+# Base design colors; the logo has a user-approved 16-color exception.
 PALETTE = (
     (0x2F, 0x33, 0x26),  # dark
     (0x44, 0x52, 0x3A),  # olive
@@ -53,6 +54,7 @@ LOGO_OUTLINE_MAX = 52
 LOGO_OUTLINE_SPREAD = 18
 ALPHA_CUTOFF = 128
 MAX_SOURCE_COLORS = 16  # transparent pixels do not consume a visible color
+MAX_LOGO_COLORS = 16
 MAX_BUILDING_COLORS = 21
 PREVIEW_SCALE = 4
 PADDING = 1  # transparent pixels on every side; feet align at height - 2
@@ -702,6 +704,51 @@ def source_palette(images, color_samples=(), max_colors=MAX_SOURCE_COLORS):
     return tuple(palette)
 
 
+def logo_palette(image):
+    """Reserve coherent original shades for each brand-logo material.
+
+    This approved exception replaces the former forced six colors. Material
+    budgets keep the small orange band and highlights from losing their shades
+    to the large dark extrusion. Representatives are actual foreground RGBs.
+    """
+    groups = [[], [], [], []]
+    for r, g, b, alpha in image.get_flattened_data():
+        if alpha < ALPHA_CUTOFF:
+            continue
+        index = (0 if max(r, g, b) < 80 else
+                 1 if r - g > 40 and g - b > 25 else
+                 2 if min(r, g, b) >= 140 and r - g < 45 else 3)
+        groups[index].append((r, g, b, 255))
+    palette = []
+    for material, (pixels, budget) in enumerate(zip(groups, (3, 4, 5, 4))):
+        if not pixels:
+            raise ValueError("Missing original logo material")
+        if material == 1:
+            # Preserve two coherent orange-band shades and two lower-edge
+            # brown shades, rather than spending three slots on near twins.
+            for part in ([p for p in pixels if p[0] >= 190],
+                         [p for p in pixels if p[0] < 190]):
+                strip = Image.new("RGBA", (len(part), 1))
+                strip.putdata(part)
+                palette.extend(source_palette([strip], max_colors=2))
+            continue
+        if material == 2:
+            # The thin upper bevel is tiny; reserve its brightest original
+            # highlight so the large cream face cannot absorb it in MEDIANCUT.
+            cutoff = sorted(sum(p[:3]) for p in pixels)[int(len(pixels) * 0.97)]
+            highlights = [p for p in pixels if sum(p[:3]) >= cutoff]
+            remaining = [p for p in pixels if sum(p[:3]) < cutoff]
+            for part, slots in ((highlights, 1), (remaining, budget - 1)):
+                strip = Image.new("RGBA", (len(part), 1))
+                strip.putdata(part)
+                palette.extend(source_palette([strip], max_colors=slots))
+            continue
+        strip = Image.new("RGBA", (len(pixels), 1))
+        strip.putdata(pixels)
+        palette.extend(source_palette([strip], max_colors=budget))
+    return tuple(dict.fromkeys(palette))
+
+
 def render(image, spec, scale, palette):
     size = (max(1, round(image.width * scale)), max(1, round(image.height * scale)))
     # Pillow resamples RGBA in premultiplied alpha, avoiding dark edge fringes.
@@ -730,7 +777,7 @@ def validate(image, spec, palette):
     if any(pixel[3] not in (0, 255) for pixel in colors):
         raise ValueError(f"Non-binary alpha: {spec.name}")
     visible = {pixel[:3] for pixel in colors if pixel[3]}
-    limit = (len(PALETTE) if spec.name == "logo" else
+    limit = (MAX_LOGO_COLORS if spec.name == "logo" else
              MAX_BUILDING_COLORS if spec.plate else MAX_SOURCE_COLORS)
     if len(visible) > limit or not visible.issubset(palette):
         raise ValueError(f"Color outside source palette / color limit: {spec.name}")
@@ -1114,7 +1161,8 @@ def convert_legacy(sources, shared_character_palette):
     }
     hero_scale = min(scales["hero-front"], scales["hero-back"])
     scales["hero-front"] = scales["hero-back"] = hero_scale
-    palettes = {"logo-source.png": PALETTE, "characters-base.png": shared_character_palette}
+    palettes = {"logo-source.png": logo_palette(extracted["logo"][1]),
+                "characters-base.png": shared_character_palette}
     for source_name in SOURCE_SIZES:
         if source_name not in palettes and any(spec.source == source_name for spec in SPRITES):
             palettes[source_name] = source_palette(
@@ -1145,6 +1193,10 @@ def convert_legacy(sources, shared_character_palette):
                    for spec in SPRITES}
 
     PREVIEW.mkdir(parents=True, exist_ok=True)
+    # Retain the pre-upgrade asset for review without overwriting it on reruns.
+    old_logo = PREVIEW / "logo-before.png"
+    if not old_logo.exists() and (ROOT / "assets/logo.png").exists():
+        old_logo.write_bytes((ROOT / "assets/logo.png").read_bytes())
     for spec in SPRITES:
         output = ROOT / spec.output
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -1161,6 +1213,17 @@ def convert_legacy(sources, shared_character_palette):
                 Image.Resampling.NEAREST).save(PREVIEW / f"{spec.name}-before-preview-4x.png")
         count = len({p[:3] for p in image.get_flattened_data() if p[3]})
         print(f"{spec.output}: {image.width}x{image.height}, {count} visible colors")
+    if old_logo.exists():
+        comparison(SPRITES[0], Image.open(old_logo).convert("RGBA"), rendered["logo"],
+                   source_label="BEFORE / 6 COLORS").save(PREVIEW / "logo-before-after.png")
+    polish_before = PREVIEW / "logo-before-highlight-polish.png"
+    if polish_before.exists():
+        comparison(SPRITES[0], Image.open(polish_before).convert("RGBA"), rendered["logo"],
+                   source_label="BEFORE / HIGHLIGHT POLISH").save(PREVIEW / "logo-highlight-comparison.png")
+    palette_swatch(palettes["logo-source.png"], "LOGO / ORIGINAL MATERIAL SHADES / <=16 COLORS",
+                   ("Outline / extrusion",) * 3 + ("Orange band / sparkle",) * 4
+                   + ("Cream face / highlight",) * 5 + ("Khaki face / shadow",) * 4).save(
+        PREVIEW / "logo-palette.png")
     comparison_montage([comparisons["hero-front"], comparisons["hero-back"]]).save(
         PREVIEW / "characters-comparison.png")
     comparison_montage([comparisons[spec.name] for spec in SPRITES if spec.plate],

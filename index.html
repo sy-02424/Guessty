@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#666F54">
   <title>GUESSTY</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/neodgm/neodgm-webfont@1.601/neodgm/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
@@ -10,37 +11,37 @@
   <script src="./js/main.js" defer></script>
 </head>
 <body>
-  <div id="app">
-
-    <!-- 타이틀 화면 -->
-    <section id="screen-title" class="screen">
-      <div class="title-main">
-        <p class="bubble">숫자로 면접 뚫기</p>
-        <h1 class="logo">GUESSTY</h1>
-        <p class="signboard">게스티메이션 도장깨기</p>
-        <div class="hero" role="img" aria-label="신입 캐릭터 자리">🧑‍💼</div>
-      </div>
-
-      <div class="dialog">
-        <span class="dialog-name">신입</span>
-        <p class="dialog-text">오늘도 면접 보러 가 볼까?</p>
-        <button type="button" class="btn" data-go="screen-placeholder">▶ 시작</button>
-      </div>
-
-      <div class="ground" aria-hidden="true"></div>
-    </section>
-
-    <!-- 맵 자리표시 (맵 작업 때 교체) -->
-    <section id="screen-placeholder" class="screen" hidden>
-      <div class="placeholder">
-        <h2 class="placeholder-title">맵 준비 중이에요</h2>
-        <p class="placeholder-text">회사 거리가 곧 열려요.</p>
-        <button type="button" class="btn" data-go="screen-title">◀ 타이틀로</button>
-      </div>
-
-      <div class="ground" aria-hidden="true"></div>
-    </section>
-
+  <!-- 모바일과 PC가 같은 한 장의 거리 배경을 공유한다. -->
+  <div class="title-world" aria-hidden="true">
+    <img id="title-world-image" src="./assets/title-scene-v2.png" width="1152" height="384" alt="" fetchpriority="high">
   </div>
+
+  <main id="app">
+    <section id="screen-title" class="screen title-screen" aria-labelledby="title-logo">
+      <header class="title-heading">
+        <h1 id="title-logo" class="title-logo">
+          <picture>
+            <source media="(max-width: 383px), (max-height: 560px)" srcset="./assets/title-logo-small-v2.png" width="144" height="60">
+            <img src="./assets/title-logo-v2.png" width="192" height="80" alt="GUESSTY" fetchpriority="high">
+          </picture>
+        </h1>
+        <p class="title-subtitle">게스티메이션 면접 도장깨기 게임</p>
+      </header>
+
+      <div class="title-hero" aria-hidden="true">
+        <span class="title-hero-shadow"></span>
+        <img src="./assets/hero-back.png" width="32" height="64" alt="">
+      </div>
+
+      <footer class="title-actions">
+        <!-- 첫 화면 디자인 단계: 인트로 연결은 후속 작업에서 추가한다. -->
+        <button type="button" id="start-button" class="start-button">
+          <span class="start-arrow" aria-hidden="true">▶</span>
+          <span>PRESS START</span>
+          <span class="start-arrow" aria-hidden="true">◀</span>
+        </button>
+      </footer>
+    </section>
+  </main>
 </body>
 </html>

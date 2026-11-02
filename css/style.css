@@ -1,25 +1,22 @@
-/* ===== 변수 (DESIGN.md §2·§3, 색 코드는 여기에만) ===== */
+/* 첫 화면: 승인한 크림 목업 + 로고 전용 명암 팔레트. */
 :root {
-  --navy: #26336B;
-  --green: #4A6E47;
-  --road: #7A7466;
-  --terracotta: #A65A44;
-  --cream: #EFE6D2;
-  --panel: rgba(42, 42, 51, 0.8);
-  --point-yellow: #E3B95A;
-  --point-coral: #F07A6A;
+  --dark: #2F3326;
+  --olive: #44523A;
+  --khaki: #666F54;
+  --cream: #E6E1C6;
+  --orange: #D9844E;
+  --mint: #46A08E;
   --result-green: #8FD16A;
   --result-yellow: #E3B547;
   --result-red: #D2574F;
-
   --font-display: 'NeoDunggeunmo', monospace;
   --font-body: 'Galmuri11', sans-serif;
-
-  /* --font-display 기준 크기 (정수배만 사용: 16 / 32 / 48 / 64) */
-  --px: 16px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --scene-width: 2304px;
+  --scene-height: 768px;
 }
 
-/* ===== 기본 ===== */
 *,
 *::before,
 *::after {
@@ -28,54 +25,63 @@
 
 html,
 body {
-  margin: 0;
+  width: 100%;
   height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
 
 body {
-  /* PC 양옆: 초록 단색 + 어두운 점 패턴 */
-  background-color: var(--green);
-  background-image: radial-gradient(var(--panel) 1px, transparent 1px);
-  background-size: 8px 8px;
+  color: var(--dark);
+  background: var(--cream);
   font-family: var(--font-body);
-  color: var(--cream);
-  -webkit-font-smoothing: none;
-  overflow-x: hidden;
+}
+
+img {
+  display: block;
+  image-rendering: pixelated;
 }
 
 h1,
-h2,
 p {
   margin: 0;
 }
 
-/* ===== 게임 틀 ===== */
-#app {
-  position: relative;
-  max-width: 430px;
-  height: 100dvh;
-  margin: 0 auto;
+/* 중앙과 양옆을 같은 한 장의 풍경으로 표시한다. */
+.title-world {
+  position: fixed;
+  inset: 0;
   overflow: hidden;
-  /* 게임 안: 크림을 옅게 섞은 촘촘한 점 */
-  background-color: var(--green);
-  background-image: radial-gradient(color-mix(in srgb, var(--cream) 18%, transparent) 1px, transparent 1px);
-  background-size: 6px 6px;
-  border-inline: 4px solid var(--navy);
-  box-shadow:
-    inset 2px 0 0 color-mix(in srgb, var(--cream) 30%, transparent),
-    inset -2px 0 0 color-mix(in srgb, var(--cream) 30%, transparent);
+  background: var(--cream);
+  pointer-events: none;
 }
 
-@media (max-width: 430px) {
-  #app {
-    border-inline: 0;
-    box-shadow: none;
-  }
+.title-world img {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: var(--scene-width);
+  height: var(--scene-height);
+  max-width: none;
+  transform: translateX(-50%);
+  user-select: none;
+}
+
+/* 모바일 폭의 투명한 조작 영역. 중앙을 별도 배경이나 테두리로 나누지 않는다. */
+#app {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
+  height: 100dvh;
+  margin-inline: auto;
+  overflow: hidden;
 }
 
 .screen {
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  width: 100%;
   height: 100%;
 }
 
@@ -83,206 +89,217 @@ p {
   display: none;
 }
 
-/* ===== 타이틀 ===== */
-.title-main {
-  flex: 1;
+.title-heading {
+  position: absolute;
+  top: max(calc(var(--safe-top) + 24px), clamp(44px, 12dvh, 112px));
+  inset-inline: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly;
-  padding: 24px 16px 8px;
+  gap: 14px;
 }
 
-/* 말풍선 부제 */
-.bubble {
-  position: relative;
-  padding: 4px 12px;
-  font-family: var(--font-display);
-  font-size: var(--px);
-  color: var(--navy);
-  background: var(--cream);
-  box-shadow:
-    0 -4px 0 0 var(--navy),
-    0 4px 0 0 var(--navy),
-    -4px 0 0 0 var(--navy),
-    4px 0 0 0 var(--navy);
+.title-logo {
+  flex: none;
+  line-height: 0;
 }
 
-.bubble::after {
+.title-logo img {
+  width: 384px;
+  height: 160px;
+}
+
+.title-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  color: var(--dark);
+  font-size: 14px;
+  line-height: 1.8;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.title-subtitle::before,
+.title-subtitle::after {
   content: '';
+  flex: 0 0 14px;
+  height: 2px;
+  background: var(--khaki);
+}
+
+.title-hero {
   position: absolute;
   left: 50%;
-  bottom: -12px;
-  width: 8px;
-  height: 8px;
-  margin-left: -4px;
-  background: var(--cream);
-  box-shadow:
-    -4px 0 0 0 var(--navy),
-    4px 0 0 0 var(--navy),
-    0 4px 0 0 var(--navy);
+  bottom: calc(128px + var(--safe-bottom));
+  width: 64px;
+  height: 128px;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
-/* 제목: 굵게 + 군청 외곽선 */
-.logo {
+.title-hero img {
+  position: relative;
+  width: 64px;
+  height: 128px;
+}
+
+.title-hero-shadow {
+  position: absolute;
+  inset-inline: -4px;
+  bottom: -2px;
+  height: 12px;
+  background: var(--dark);
+  clip-path: polygon(12% 0, 88% 0, 88% 25%, 100% 25%, 100% 75%, 88% 75%, 88% 100%, 12% 100%, 12% 75%, 0 75%, 0 25%, 12% 25%);
+}
+
+.title-actions {
+  position: absolute;
+  inset-inline: 8px;
+  bottom: calc(36px + var(--safe-bottom));
+  display: flex;
+  justify-content: center;
+}
+
+.start-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 60px;
+  margin: 0;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 0;
+  color: var(--orange);
+  background: transparent;
   font-family: var(--font-display);
-  font-size: calc(var(--px) * 3);
+  font-size: 32px;
   font-weight: bold;
   line-height: 1;
-  letter-spacing: 4px;
-  color: var(--cream);
+  letter-spacing: 2px;
+  white-space: nowrap;
   text-shadow:
-    -3px 0 0 var(--navy),
-    3px 0 0 var(--navy),
-    0 -3px 0 var(--navy),
-    0 3px 0 var(--navy),
-    -3px -3px 0 var(--navy),
-    3px -3px 0 var(--navy),
-    -3px 3px 0 var(--navy),
-    3px 3px 0 var(--navy),
-    0 7px 0 var(--navy);
-}
-
-@media (min-width: 400px) {
-  .logo {
-    font-size: calc(var(--px) * 4);
-    letter-spacing: 6px;
-  }
-}
-
-/* 간판: 크림 판 + 테라코타 테두리 (테라코타 위에는 글자를 올리지 않음) */
-.signboard {
-  padding: 6px 14px;
-  font-family: var(--font-display);
-  font-size: var(--px);
-  color: var(--navy);
-  background: var(--cream);
-  border: 4px solid var(--terracotta);
-  box-shadow: 4px 4px 0 0 var(--navy);
-}
-
-/* 캐릭터 자리표시 (네모 + 이모지) */
-.hero {
-  display: grid;
-  place-items: center;
-  width: 96px;
-  height: 96px;
-  font-size: 48px;
-  background: color-mix(in srgb, var(--cream) 25%, transparent);
-  border: 4px solid var(--navy);
-  box-shadow: inset 0 0 0 2px var(--cream);
-}
-
-/* ===== 대화창 (대면 UI: 픽셀 테두리 + 이름 탭) ===== */
-.dialog {
-  position: relative;
-  margin: 20px 16px 16px;
-  padding: 24px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  background: var(--navy);
-  border: 4px solid var(--cream);
-  box-shadow:
-    0 0 0 4px var(--navy),
-    0 8px 0 4px var(--panel);
-}
-
-.dialog-name {
-  position: absolute;
-  top: -18px;
-  left: 12px;
-  padding: 4px 12px 4px 16px;
-  font-size: 14px;
-  font-weight: bold;
-  color: var(--navy);
-  background: var(--cream);
-  border: 3px solid var(--navy);
-  box-shadow: inset 6px 0 0 var(--point-coral);
-}
-
-.dialog-text {
-  align-self: stretch;
-  font-size: 16px;
-  line-height: 1.5;
-}
-
-/* ===== 버튼 ===== */
-.btn {
-  min-height: 48px;
-  padding: 8px 28px;
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--navy);
-  background: var(--point-yellow);
-  border: 4px solid var(--navy);
-  border-radius: 0;
-  box-shadow:
-    inset 0 3px 0 color-mix(in srgb, var(--cream) 60%, transparent),
-    0 4px 0 0 var(--panel);
+    -1px 0 var(--dark),
+    1px 0 var(--dark),
+    0 -1px var(--dark),
+    0 1px var(--dark);
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.btn:active {
+.start-arrow {
+  flex: none;
+  font-size: 32px;
+  letter-spacing: 0;
+}
+
+.start-button:active,
+.start-button.is-pressed {
   transform: translateY(2px);
-  box-shadow:
-    inset 0 3px 0 color-mix(in srgb, var(--cream) 60%, transparent),
-    0 2px 0 0 var(--panel);
 }
 
-.btn:focus-visible {
-  outline: 3px dashed var(--cream);
+.start-button:focus-visible {
+  outline: 2px dashed var(--cream);
   outline-offset: 4px;
 }
 
-/* ===== 바닥: 돌바닥 띠 ===== */
-.ground {
-  flex: none;
-  height: 32px;
-  background-color: var(--road);
-  background-image:
-    linear-gradient(90deg, var(--panel) 2px, transparent 2px),
-    linear-gradient(var(--panel) 2px, transparent 2px);
-  background-size: 24px 16px;
-  border-top: 4px solid var(--navy);
+@media (hover: hover) {
+  .start-button:hover .start-arrow:first-child {
+    transform: translateX(2px);
+  }
+
+  .start-button:hover .start-arrow:last-child {
+    transform: translateX(-2px);
+  }
 }
 
-/* ===== 맵 자리표시 ===== */
-.placeholder {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 16px;
-  text-align: center;
+@media (max-width: 383px), (max-height: 560px) {
+  .title-logo img {
+    width: 288px;
+    height: 120px;
+  }
 }
 
-.placeholder-title {
-  font-family: var(--font-display);
-  font-size: calc(var(--px) * 2);
-  font-weight: bold;
-  color: var(--cream);
-  text-shadow:
-    -2px 0 0 var(--navy),
-    2px 0 0 var(--navy),
-    0 -2px 0 var(--navy),
-    0 2px 0 var(--navy),
-    -2px -2px 0 var(--navy),
-    2px -2px 0 var(--navy),
-    -2px 2px 0 var(--navy),
-    2px 2px 0 var(--navy),
-    0 5px 0 var(--navy);
+@media (max-width: 383px) {
+  .title-subtitle {
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .title-subtitle::before,
+  .title-subtitle::after {
+    flex-basis: 12px;
+  }
 }
 
-.placeholder-text {
-  padding: 6px 12px;
-  font-size: 16px;
-  color: var(--cream);
-  background: var(--navy);
+@media (max-height: 640px) {
+  .title-heading {
+    top: max(calc(var(--safe-top) + 16px), 24px);
+    gap: 10px;
+  }
+
+  .title-hero {
+    bottom: calc(112px + var(--safe-bottom));
+  }
+
+  .title-actions {
+    bottom: calc(24px + var(--safe-bottom));
+  }
+}
+
+@media (max-height: 560px) {
+  .title-heading {
+    top: calc(16px + var(--safe-top));
+    gap: 8px;
+  }
+
+  .title-hero,
+  .title-hero img {
+    width: 32px;
+    height: 64px;
+  }
+
+  .title-hero {
+    bottom: calc(96px + var(--safe-bottom));
+  }
+
+  .title-hero-shadow {
+    inset-inline: -2px;
+    height: 6px;
+  }
+
+  .title-actions {
+    bottom: calc(16px + var(--safe-bottom));
+  }
+
+  .start-button {
+    min-height: 52px;
+  }
+}
+
+@media (max-height: 420px) {
+  .title-heading {
+    top: calc(12px + var(--safe-top));
+  }
+
+  .title-logo img {
+    width: 144px;
+    height: 60px;
+  }
+
+  .title-subtitle {
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .title-hero {
+    bottom: calc(84px + var(--safe-bottom));
+  }
+
+  .title-actions {
+    bottom: calc(8px + var(--safe-bottom));
+  }
 }
