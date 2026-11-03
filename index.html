@@ -7,8 +7,8 @@
   <title>GUESSTY</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/neodgm/neodgm-webfont@1.601/neodgm/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
-  <link rel="stylesheet" href="./css/style.css">
-  <script src="./js/main.js" defer></script>
+  <link rel="stylesheet" href="./css/style.css?v=7">
+  <script src="./js/main.js?v=7" defer></script>
 </head>
 <body class="world-outdoor" data-world="title">
   <!-- 화면 종류(title / map / indoor)에 따라 중앙과 PC 양옆이 같은 세계로 확장된다. -->
@@ -155,9 +155,9 @@
     </section>
 
     <!-- ④ 면접 화면 (100dvh 무스크롤, interview.png.png 시안 준수) -->
-    <section id="screen-interview" class="screen interview-screen" aria-label="면접 진행 화면" hidden>
+    <section id="screen-interview" class="screen interview-screen" aria-label="면접 진행 화면" onclick="" hidden>
       <!-- 상단 사무실 무대 (office-bg.png + 과장/부장 + 레트로 상태창) -->
-      <div class="interview-stage">
+      <div id="interview-stage" class="interview-stage" onclick="">
         <img class="interview-bg" src="./assets/office-bg.png" width="216" height="324" alt="">
 
         <!-- 좌측 상단 미니 로고 -->

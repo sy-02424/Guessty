@@ -1222,6 +1222,10 @@ body[data-world="indoor"] .indoor-world-wings {
   user-select: none;
 }
 
+.interview-screen.is-advancing {
+  cursor: pointer;
+}
+
 /* 상단 사무실 무대 영역 (높이 46%, office-bg.png 상단 책상선과 일치) */
 .interview-stage {
   position: relative;
@@ -1230,6 +1234,13 @@ body[data-world="indoor"] .indoor-world-wings {
   overflow: hidden;
   background: var(--olive);
   border-bottom: 3px solid var(--dark);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.interview-screen.is-advancing .interview-stage,
+.interview-screen.is-advancing .interview-interact {
+  cursor: pointer;
 }
 
 .interview-bg {
@@ -1595,6 +1606,7 @@ body[data-world="indoor"] .indoor-world-wings {
 
 .interview-choice-btn:disabled {
   cursor: default;
+  pointer-events: none;
 }
 
 /* 실전모드 숫자 입력 연습장 (레트로 컴퓨터 창) */

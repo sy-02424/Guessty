@@ -540,6 +540,7 @@ let dialogueQueue = [];
 let onDialogueDone = null;
 let choiceLocked = false;
 let canAdvanceDialogue = false;
+let lastAdvanceAt = 0;
 
 function formatNumber(val) {
   if (typeof val !== 'number' || !Number.isFinite(val)) return String(val);
@@ -602,6 +603,7 @@ function showDialogueLine(line, hasNext = true) {
   const heroPose = line.hero || 'neutral';
 
   canAdvanceDialogue = Boolean(hasNext);
+  screens.interview?.classList.toggle('is-advancing', canAdvanceDialogue);
 
   setInterviewSprites({
     gwajang: gwajangPose,
@@ -678,9 +680,11 @@ function renderChoiceButtons(choices, onSelect) {
     btn.type = 'button';
     btn.className = 'interview-choice-btn';
     btn.textContent = choice.text;
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (event) => {
+      event.stopPropagation();
       if (choiceLocked) return;
       choiceLocked = true;
+      lastAdvanceAt = Date.now();
       btn.classList.add('is-selected');
       Array.from(interviewChoices.querySelectorAll('button')).forEach((b) => {
         b.disabled = true;
@@ -1256,17 +1260,23 @@ mapModalRound2?.addEventListener('click', () => {
   enterInterviewFromMap(selectedCompany, 2, selectedMode);
 });
 
-interviewerBubble?.addEventListener('click', () => {
-  if (canAdvanceDialogue) {
-    advanceDialogue();
+function handleInterviewAdvanceTap(event) {
+  if (!canAdvanceDialogue) return;
+  if (
+    event.target.closest(
+      '#interview-exit-btn, #practice-submit-btn, #practice-input, .interview-choice-btn:not(:disabled)'
+    )
+  ) {
+    return;
   }
-});
+  const now = Date.now();
+  if (now - lastAdvanceAt < 260) return;
+  lastAdvanceAt = now;
+  advanceDialogue();
+}
 
-interviewDialogueArea?.addEventListener('click', () => {
-  if (canAdvanceDialogue) {
-    advanceDialogue();
-  }
-});
+screens.interview?.addEventListener('click', handleInterviewAdvanceTap);
+screens.interview?.addEventListener('touchend', handleInterviewAdvanceTap, { passive: true });
 
 window.addEventListener('keydown', (event) => {
   if (!screens.interview?.hidden) {
@@ -1284,9 +1294,13 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
-practiceSubmitBtn?.addEventListener('click', submitPracticeAnswer);
+practiceSubmitBtn?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  submitPracticeAnswer();
+});
 
-interviewExitBtn?.addEventListener('click', () => {
+interviewExitBtn?.addEventListener('click', (event) => {
+  event.stopPropagation();
   currentSession = null;
   dialogueQueue = [];
   onDialogueDone = null;
